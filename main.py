@@ -6,20 +6,16 @@ from sys import platform
 
 # Find the path to the Desktop
 if platform == "linux" or platform == "linux2" or platform == "darwin":
-    #desktop = pathlib.Path(r"~/")
-    #desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-    desktop = os.path.expanduser("~/Desktop")
+    desktop_path = os.path.expanduser("~/Desktop")
     # check if the path exists
     if not os.path.exists(desktop):
         # if not, use home directory
-        desktop = os.path.expanduser("~") 
-#elif platform == "darwin":
-    #desktop = pathlib.Path(r"~/Desktop")
-    #desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop') 
+        desktop_path = os.path.expanduser("~/") 
+    desktop = pathlib.Path(desktop_path)
 elif platform == "win32":
-    os.path.expanduser("~\\Desktop")
+    desktop_path = os.path.expanduser("~\\Desktop")
     #desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-    #desktop = pathlib.Path(r"C:\Users\MyName\Desktop")
+    desktop = pathlib.Path(desktop_path)
 
 # Create a new folder
 for sub_dir in ["CODE", "NOTES", "PDFS", "PICS"]:
