@@ -19,12 +19,6 @@ elif platform == "win32":
         desktop_path = os.path.expanduser("~\\OneDrive\\Desktop")
     desktop = pathlib.Path(desktop_path)
 
-#def create_folders(position: int = 0 ):
-#    """ Create folders for the file types """
-#    new_dir = desktop.joinpath(file_types.keys()[position])
-#    new_dir.mkdir(exist_ok=True)
-#    new_path = desktop / file_types.keys()[position] / each.name
-   
 
 def main():
     """ Main function """
