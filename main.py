@@ -10,12 +10,14 @@ if platform == "linux" or platform == "linux2" or platform == "darwin":
     # check if the path exists
     if not os.path.exists(desktop_path):
         # if not, use home directory
+        print("[!] Desktop directory not found, using home directory.")
         desktop_path = os.path.expanduser("~/") 
     desktop = pathlib.Path(desktop_path)
 elif platform == "win32":
     desktop_path = os.path.expanduser("~\\Desktop")
     if not os.path.exists(desktop_path):
         # if not, find in onedrive
+        print("[!] Local Desktop not found, using OneDrive Desktop directory.")
         desktop_path = os.path.expanduser("~\\OneDrive\\Desktop")
     desktop = pathlib.Path(desktop_path)
 
