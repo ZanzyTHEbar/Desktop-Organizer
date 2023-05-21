@@ -26,8 +26,17 @@ def main():
     """ Main function """
     # create dict of file types and their respective folders
     file_types = {
-        "CODE": [".c", ".h", ".py"],
+        "CODE": [".c", ".h", ".py", ".rs", ".go", ".js", "ts", ".jsx", "tsx", ".html", ".css", ".php", ".java", ".cpp", ".cs", ".vb", ".sql", ".pl", ".swift", ".kt", ".r", ".m", ".asm"],
+        "MARKUP": [".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log", ".md"],
         "NOTES": [".md", ".rtf", ".txt"],
+        "DOCS": [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"],
+        "EXE": [".exe", ".appimage", ".msi"],
+        "VIDS": [".mp4", ".mov", ".avi", ".mkv"],
+        "COMPRESSED": [".zip", ".rar", ".tar", ".gz", ".7z"],
+        "SCRIPTS": [".sh", ".bat"],
+        "INSTALLERS": [".deb", ".rpm"],
+        "BOOKS": [".epub", ".mobi"],
+        "MUSIC": [".mp3", ".wav", ".ogg", ".flac"],
         "PDFS": [".pdf"],
         "PICS": [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"],
     }
