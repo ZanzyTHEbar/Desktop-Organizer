@@ -2,11 +2,7 @@
   "branches": [
     "main",
     "master",
-    "release",
-    {
-      "name": "SolidJSGUI",
-      "prerelease": true
-    }
+    "release"
   ],
   "plugins": [
     [
