@@ -33,12 +33,12 @@ jobs:
       - name: PyInstaller Windows
         uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
         with:
-          path: src/main.py
+          path: src
 
       - name: PyInstaller Linux
         uses: JackMcKew/pyinstaller-action-linux@python3.10
         with:
-          path: src/main.py
+          path: src
 
       - uses: actions/upload-artifact@v2
         with:
