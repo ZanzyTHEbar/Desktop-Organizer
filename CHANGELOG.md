@@ -3,6 +3,18 @@
 [![semantic versioning](https://img.shields.io/badge/semantic%20versioning-2.0.0-green.svg)](https://semver.org)
 > All notable changes to this project will be documented in this file
 
+## [1.1.0](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.0.0...v1.1.0) (2023-05-21)
+
+
+### 🍕 Features
+
+* add more file type support ([dd46605](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/dd4660556790578c28cb53194f4c0067058a1e56))
+
+
+### 🔁 Continuous Integration
+
+* **gh-fix:** fix gh action issue with spec ([6424eff](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/6424effb86be511f35eff9707cd1f07a71904a63))
+
 ## 1.0.0 (2023-05-21)
 
 
