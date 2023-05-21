@@ -8,54 +8,47 @@ from sys import platform
 if platform == "linux" or platform == "linux2" or platform == "darwin":
     desktop_path = os.path.expanduser("~/Desktop")
     # check if the path exists
-    if not os.path.exists(desktop):
+    if not os.path.exists(desktop_path):
         # if not, use home directory
         desktop_path = os.path.expanduser("~/") 
     desktop = pathlib.Path(desktop_path)
 elif platform == "win32":
     desktop_path = os.path.expanduser("~\\Desktop")
-    #desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    if not os.path.exists(desktop_path):
+        # if not, find in onedrive
+        desktop_path = os.path.expanduser("~\\OneDrive\\Desktop")
     desktop = pathlib.Path(desktop_path)
 
-# Create a new folder
-for sub_dir in ["CODE", "NOTES", "PDFS", "PICS"]:
-    new_dir = desktop.joinpath(sub_dir)
-    new_dir.mkdir(exist_ok=True)
+#def create_folders(position: int = 0 ):
+#    """ Create folders for the file types """
+#    new_dir = desktop.joinpath(file_types.keys()[position])
+#    new_dir.mkdir(exist_ok=True)
+#    new_path = desktop / file_types.keys()[position] / each.name
+   
 
-files_moved = 0
-
-# Filter for screenshots only
-for each in desktop.iterdir():
-    if not each.is_file():
-        # Skip directories
-        continue
-
-    extension = each.suffix.lower()
-
-    # Create a new path for each file
-    if extension in [".c", ".h", ".py"]:
-        # put it in CODE
-        new_path = desktop / "CODE" / each.name
-
-    elif extension in [".md", ".rtf", ".txt"]:
-        # put it in NOTES
-        new_path = desktop / "NOTES" / each.name
-
-    elif extension == ".pdf":
-        # put it in PDFS
-        new_path = desktop / "PDFS" / each.name
-
-    elif extension in [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"]:
-        # put it in PICS
-        new_path = desktop / "PICS" / each.name
-
+def main():
+    """ Main function """
+    # create dict of file types and their respective folders
+    file_types = {
+        "CODE": [".c", ".h", ".py"],
+        "NOTES": [".md", ".rtf", ".txt"],
+        "PDFS": [".pdf"],
+        "PICS": [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"],
+    }
+    files_moved = 0
+    for each in desktop.iterdir():
+        if each.is_file():
+            for key, value in file_types.items():
+                if each.suffix in value:
+                    new_dir = desktop.joinpath(key)
+                    new_dir.mkdir(exist_ok=True)
+                    new_path = desktop / key / each.name
+                    each.rename(new_path)
+                    files_moved += 1
+                    print(f"Moved {each.name} to {new_path}")
+    if files_moved > 0:
+        print(f"[+] Successfully moved {files_moved} files!")
     else:
-        continue
+        print("[!] No files were moved.")
 
-    # Move the screenshot there
-    print(f"[!] Moving {each} to {new_path}...")
-    each.rename(new_path)
-    files_moved += 1
-
-if files_moved > 0:
-    print(f"[+] Successfully moved {files_moved} files!")
+main()
