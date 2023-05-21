@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest, ubuntu-latest]
+        platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -31,14 +31,12 @@ jobs:
           token: ${{ env.GITHUB_TOKEN }}
 
       - name: PyInstaller Windows
-        if: matrix.platform == 'windows-latest'
-        uses: JackMcKew/pyinstaller-action-windows@main
+        uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
         with:
           path: src/main.py
 
       - name: PyInstaller Linux
-        if: matrix.platform == 'ubuntu-latest'
-        uses: JackMcKew/pyinstaller-action-linux@main
+        uses: JackMcKew/pyinstaller-action-linux@python3.10
         with:
           path: src/main.py
 
