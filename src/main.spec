@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main.py'],
+    ['desktop-cleaner.py'],
     pathex=[],
     binaries=[],
     datas=[],
