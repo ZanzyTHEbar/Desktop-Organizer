@@ -12,7 +12,7 @@ mod utils;
 /**  
  *  Logic Loop
  *  1. Get config
- *  2. Get dir entries by detecting the OS and then getting the directory to Desktop or home 
+ *  2. Get dir entries by detecting the OS and then getting the directory to Desktop or home if config setting enabled
  *     iterating through the input path and creating a DirEntry struct for each entry
  *  3. Iterate through each DirEntry and move the file to the appropriate folder
  *   - If the file is a symlink, skip it
