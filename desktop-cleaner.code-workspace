@@ -1,0 +1,65 @@
+{
+  "folders": [
+    {
+      "name": "Source",
+      "path": "./src"
+    },
+    {
+      "name": "Repo Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.autoSave": "afterDelay",
+    "rust-analyzer.checkOnSave.enable": true,
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "rust-analyzer.checkOnSave.allTargets": true,
+    "rust-analyzer.files.watcher": "client",
+    "rust-analyzer.files.excludeDirs": [
+      "**/target",
+      "**/node_modules",
+      "**/dist",
+      "**/build",
+      "**/public",
+      "**/assets",
+      "**/src-tauri/target",
+      "**/scripts",
+      "**/src/components",
+      "**/src/interfaces",
+      "**/src/pages",
+      "**/src/static",
+      "**/src/styles",
+      "**/src/utils"
+    ],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[toml]": {
+      "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "liveServer.settings.multiRootWorkspaceName": "ETVR",
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "powershell.cwd": "c:\\Users\\zacar\\Documents\\GitHub\\EyeTrackVR\\GUI\\ETVR",
+    "[shellscript]": {
+      "editor.defaultFormatter": "shakram02.bash-beautify"
+    },
+    "cSpell.words": [
+      "appimage",
+      "Automagically",
+      "flac",
+      "mobi",
+      "onedrive",
+      "PDFS",
+      "thiserror"
+    ]
+  }
+}
