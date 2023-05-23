@@ -7,7 +7,6 @@ pub struct DirEntry {
     pub file_name: String,
     pub file_type: String,
     pub is_dir: bool,
-    pub dir_entries: Option<Vec<DirEntry>>,
 }
 
 impl DirEntry {
@@ -16,14 +15,13 @@ impl DirEntry {
         file_name: String,
         file_type: String,
         is_dir: bool,
-        dir_entries: Option<Vec<DirEntry>>,
     ) -> Self {
         Self {
             path,
             file_name,
             file_type,
             is_dir,
-            dir_entries,
+            //dir_entries,
         }
     }
 
@@ -42,21 +40,12 @@ impl DirEntry {
             };
 
             let is_dir = path.is_dir();
-
-            let entry = entry
-                .path()
-                .to_str()
-                .map(String::from)
-                .ok_or_else(|| Error::Generic(f!("Invalid Path {entry:?}")));
-
-            let dir_entries = if is_dir { Some(vec![]) } else { None };
-
+            let entry: String = W(&entry).try_into()?;
             let dir_entry = Self::new(
-                entry?,
+                entry,
                 file_name.to_string(),
                 file_type,
                 is_dir,
-                dir_entries,
             );
 
             dir_entry.print_dir_entry();
@@ -69,36 +58,5 @@ impl DirEntry {
         println!("File Name: {}", self.file_name);
         println!("File Type: {}", self.file_type);
         println!("Is Dir: {}", self.is_dir);
-        println!("Dir Entries: {:?}", self.dir_entries);
     }
 }
-
-/*
-let mut dir_entries_vec = Vec::new();
-        for entry in dir_entries.unwrap() {
-            let path = entry.path().to_str().unwrap().to_string();
-            let file_name = entry.file_name().to_str().unwrap().to_string();
-            let file_type = match entry.path().extension() {
-                Some(ext) => ext.to_str().unwrap().to_string(),
-                None => "".to_string(),
-            };
-            let is_dir = entry.path().is_dir();
-            let dir_entries = None;
-            dir_entries_vec.push(DirEntry::new(
-                path,
-                file_name,
-                file_type,
-                is_dir,
-                dir_entries,
-            ));
-        }
-        Ok(Self::new(
-            path,
-            file_name,
-            file_type,
-            is_dir,
-            Some(dir_entries_vec),
-        ))
-
-
- */
