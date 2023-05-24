@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::VecDeque;
 use std::fs::read_dir;
 
 #[derive(Debug)]
@@ -11,13 +12,13 @@ pub struct DirEntry {
 
 #[derive(Debug, Default)]
 pub struct DirEntries {
-    pub dir_entries: Option<Vec<DirEntry>>,
+    pub dir_entries: Option<VecDeque<DirEntry>>,
 }
 
 impl DirEntries {
     fn new() -> Self {
         Self {
-            dir_entries: Some(Vec::new()),
+            dir_entries: Some(VecDeque::new()),
         }
     }
     pub fn default() -> Self {
@@ -98,7 +99,11 @@ impl DirEntry {
                 let temp_default = Self::default().expect("Failed to get DirEntry");
                 let temp_entry = dir_entry.unwrap_or(temp_default);
                 temp_entry.print_dir_entry()?;
-                dir_entries.dir_entries.as_mut().unwrap().push(temp_entry);
+                dir_entries
+                    .dir_entries
+                    .as_mut()
+                    .unwrap()
+                    .push_back(temp_entry);
             }
         }
         Ok(Self::default().expect("Failed to get DirEntry"))

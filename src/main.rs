@@ -2,6 +2,7 @@
 extern crate log;
 use crate::prelude::*;
 use clap::Parser;
+use directories::UserDirs;
 
 mod args;
 mod config;
@@ -26,26 +27,53 @@ mod utils;
  *  5. Save the config if the config has been modified
  */
 fn main() -> Result<()> {
-    // Setup logger
-    //let args = args::DesktopCleanerArgs::parse();
+    // get args
+    let cli_args = args::DesktopCleanerArgs::parse();
+
+    let mut directory = cli_args.directory.unwrap_or_else(|| {
+        println!("Failed to get directory, using the default for your OS");
+        String::from("")
+    });
+
+    // read config
     let config = config::DesktopCleanerConfig::init()?;
     println!("Config: {:?}", config.file_types);
     let debug_level = config.map_debug_level();
     println!("Debug Level: {:?}", debug_level);
+
+    // Setup logger
     logger::DesktopCleanerLogger::init(debug_level).unwrap();
-    // get args
-    //debug!("Args: {:?}", args);
-    // read config
+
+    for (key, value) in config.file_types.iter() {
+        println!("Key: {}, Value: {:?}", key, value);
+    }
 
     // get folders
     let folders = config.file_types.keys();
-
     for folder in folders {
         debug!("Folder: {}", folder);
     }
 
+    // get user dirs
+    // Linux	XDG_DESKTOP_DIR	/home/alice/Desktop
+    // macOS	$HOME/Desktop	/Users/Alice/Desktop
+    // Windows  {FOLDERID_Desktop}	C:\Users\Alice\Desktop
+    /* if args.subcmd {
+        debug!("Debugging enabled");
+    } */
+
+    if directory.is_empty() {
+        if let Some(user_dirs) = UserDirs::new() {
+            let path = user_dirs.desktop_dir().unwrap_or_else(|| {
+                println!("Failed to get desktop dir, using the home dir instead");
+                user_dirs.home_dir()
+            });
+            println!("Location Dir: {:?}", path);
+            directory = path.to_str().unwrap().to_string();
+        }
+    }
     // get the appropriate directory from the user- if none provided use the default for their desktop
-    let path = std::path::PathBuf::from("./");
+    let path = std::path::PathBuf::from(directory);
 
     // get dir entries
     let mut dir_entries = handle_dir::DirEntries::default();
