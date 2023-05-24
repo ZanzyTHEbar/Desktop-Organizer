@@ -29,6 +29,16 @@ fn main() -> Result<()> {
     info!("Hello, world!");
 
     // read config
+    let config = config::DesktopCleanerConfig::init()?;
+    debug!("Config: {:?}", config.file_types);
+
+    let code = config.file_types.get("CODE").unwrap();
+
+    // loop through each file type
+
+    for file_type in code {
+        debug!("File type: {}", file_type);
+    }
 
     // detect OS and get the appropriate directory
 
@@ -38,13 +48,10 @@ fn main() -> Result<()> {
 
     // print number of files moved
 
-    // TODO: create static map of file extensions to folder names
     // TODO: create global files moved counter
     // TODO: write main logic loop
 
     handle_dir::DirEntry::get_dir_entry("./".to_string())?;
-
-    let config = config::Config::init()?;
 
     Ok(())
 }
