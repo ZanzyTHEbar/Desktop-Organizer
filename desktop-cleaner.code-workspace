@@ -61,7 +61,12 @@
       "mobi",
       "onedrive",
       "PDFS",
+      "prometheon",
       "thiserror"
-    ]
+    ],
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
   }
 }

@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate log;
-
 use crate::prelude::*;
 
+mod config;
 mod error;
 mod handle_dir;
 mod logger;
@@ -27,11 +27,24 @@ fn main() -> Result<()> {
     logger::DesktopCleanerLogger::init(log::LevelFilter::max()).unwrap();
 
     info!("Hello, world!");
-    handle_dir::DirEntry::get_dir_entry("./".to_string())?;
+
+    // read config
+
+    // detect OS and get the appropriate directory
+
+    // get dir entries
+
+    // move files
+
+    // print number of files moved
 
     // TODO: create static map of file extensions to folder names
     // TODO: create global files moved counter
     // TODO: write main logic loop
+
+    handle_dir::DirEntry::get_dir_entry("./".to_string())?;
+
+    let config = config::Config::init()?;
 
     Ok(())
 }

@@ -9,7 +9,14 @@ repository = "https://github.com/ZanzyTHEbar/Desktop-Cleaner"
 readme = "README.md"
 license-file = "LICENSE"
 keywords = ["desktop", "cleaner", "clean", "organize"]
-categories = ["utility", "command-line-utilities", "desktop", "cleaner", "clean", "organize"]
+categories = [
+    "utility",
+    "command-line-utilities",
+    "desktop",
+    "cleaner",
+    "clean",
+    "organize",
+]
 rust-version = "1.69"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -21,9 +28,15 @@ serde_json = "1.0"
 env_logger = "0.10.0"
 thiserror = "1"
 toml = "0.7.4"
+directories = "5.0.1"
+
+
+[dependencies.phf]
+version = "0.11.1"
+features = ["macros"]
 
 [dependencies.serde]
-version = "1.0"
+version = "1"
 features = ["derive"]
 
 [dependencies.tokio]
@@ -33,7 +46,6 @@ features = ["full"]
 [dependencies.clap]
 version = "4"
 features = ["cargo"]
-
 
 [dev-dependencies]
 anyhow = "1"
