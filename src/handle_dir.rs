@@ -20,11 +20,9 @@ impl DirEntries {
             dir_entries: Some(Vec::new()),
         }
     }
-
     pub fn default() -> Self {
         Self::new()
     }
-
     pub fn print_dir_entries(&self) -> Result<()> {
         let dir_entries_str = String::try_from(W(self))?;
         debug!("{}", dir_entries_str);
@@ -53,7 +51,6 @@ impl TryFrom<W<&DirEntries>> for String {
 
 impl TryFrom<W<&DirEntry>> for String {
     type Error = Error;
-
     fn try_from(dir_entry: W<&DirEntry>) -> Result<Self> {
         let dir_entry_str = f!(
             "\nPath: {}\nFile Name: {}\nFile Type: {}\nIs Dir: {}\n",
@@ -75,11 +72,9 @@ impl DirEntry {
             is_dir,
         })
     }
-
     pub fn default() -> Result<Self> {
         Self::new("".to_string(), "".to_string(), "".to_string(), false)
     }
-
     pub fn get_dirs(dir: &std::path::Path, dir_entries: &mut DirEntries) -> Result<Self> {
         if dir.is_dir() {
             let entries = read_dir(dir)?
@@ -108,7 +103,6 @@ impl DirEntry {
         }
         Ok(Self::default().expect("Failed to get DirEntry"))
     }
-
     pub fn print_dir_entry(&self) -> Result<()> {
         let dir_entry: String = W(self).try_into()?;
         debug!("{}", dir_entry);

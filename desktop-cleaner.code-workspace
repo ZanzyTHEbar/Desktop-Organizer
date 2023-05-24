@@ -63,6 +63,7 @@
       "opzioni",
       "PDFS",
       "prometheon",
+      "subcmd",
       "thiserror"
     ],
     "[python]": {

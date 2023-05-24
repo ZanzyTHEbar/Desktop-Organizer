@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate log;
 use crate::prelude::*;
+use clap::Parser;
 
 mod args;
 mod config;
@@ -25,10 +26,12 @@ mod utils;
  *  5. Save the config if the config has been modified
  */
 fn main() -> Result<()> {
+    // Setup logger
     logger::DesktopCleanerLogger::init(log::LevelFilter::max()).unwrap();
 
-    info!("Hello, world!");
-
+    // get args
+    let args = args::DesktopCleanerArgs::parse();
+    debug!("Args: {:?}", args);
     // read config
     let config = config::DesktopCleanerConfig::init()?;
     debug!("Config: {:?}", config.file_types);
@@ -41,8 +44,14 @@ fn main() -> Result<()> {
     }
 
     // get the appropriate directory from the user- if none provided use the default for their desktop
+    let path = std::path::PathBuf::from("./");
 
     // get dir entries
+    let mut dir_entries = handle_dir::DirEntries::default();
+    handle_dir::DirEntry::get_dirs(&path, &mut dir_entries)?;
+    println!("---------------------------------");
+    dir_entries.print_dir_entries()?;
+    println!("---------------------------------");
 
     // move files
 
@@ -50,14 +59,6 @@ fn main() -> Result<()> {
 
     // TODO: create global files moved counter
     // TODO: write main logic loop
-
-    let mut dir_entries = handle_dir::DirEntries::default();
-
-    let path = std::path::PathBuf::from("./");
-    handle_dir::DirEntry::get_dirs(&path, &mut dir_entries)?;
-    println!("---------------------------------");
-    dir_entries.print_dir_entries()?;
-    println!("---------------------------------");
 
     Ok(())
 }
