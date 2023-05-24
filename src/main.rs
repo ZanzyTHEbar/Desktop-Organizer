@@ -51,7 +51,13 @@ fn main() -> Result<()> {
     // TODO: create global files moved counter
     // TODO: write main logic loop
 
+    let mut dir_entries = handle_dir::DirEntries::default();
+
     let path = std::path::PathBuf::from("./");
-    handle_dir::DirEntry::get_dirs(&path)?;
+    handle_dir::DirEntry::get_dirs(&path, &mut dir_entries)?;
+    println!("---------------------------------");
+    dir_entries.print_dir_entries()?;
+    println!("---------------------------------");
+
     Ok(())
 }

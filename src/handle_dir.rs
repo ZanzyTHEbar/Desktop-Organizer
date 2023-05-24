@@ -27,7 +27,7 @@ impl DirEntries {
 
     pub fn print_dir_entries(&self) -> Result<()> {
         let dir_entries_str = String::try_from(W(self))?;
-        println!("{}", dir_entries_str);
+        debug!("{}", dir_entries_str);
         Ok(())
     }
 }
@@ -39,7 +39,7 @@ impl TryFrom<W<&DirEntries>> for String {
         for dir_entry in &dir_entries.0.dir_entries {
             for entry in dir_entry {
                 dir_entries_str.push_str(&f!(
-                    "Path: {}\nFile Name: {}\nFile Type: {}\nIs Dir: {}\n",
+                    "\nPath: {}\nFile Name: {}\nFile Type: {}\nIs Dir: {}\n",
                     entry.path,
                     entry.file_name,
                     entry.file_type,
@@ -56,7 +56,7 @@ impl TryFrom<W<&DirEntry>> for String {
 
     fn try_from(dir_entry: W<&DirEntry>) -> Result<Self> {
         let dir_entry_str = f!(
-            "Path: {}\nFile Name: {}\nFile Type: {}\nIs Dir: {}\n",
+            "\nPath: {}\nFile Name: {}\nFile Type: {}\nIs Dir: {}\n",
             dir_entry.0.path,
             dir_entry.0.file_name,
             dir_entry.0.file_type,
@@ -80,7 +80,7 @@ impl DirEntry {
         Self::new("".to_string(), "".to_string(), "".to_string(), false)
     }
 
-    pub fn get_dirs(dir: &std::path::Path) -> Result<Self> {
+    pub fn get_dirs(dir: &std::path::Path, dir_entries: &mut DirEntries) -> Result<Self> {
         if dir.is_dir() {
             let entries = read_dir(dir)?
                 .map(|res| res.map(|e| e.path()))
@@ -101,13 +101,9 @@ impl DirEntry {
                 let entry: String = W(&entry).try_into()?;
                 let dir_entry = Self::new(entry, file_name.to_string(), file_type, is_dir);
                 let temp_default = Self::default().expect("Failed to get DirEntry");
-                let temp_entry = dir_entry.as_ref().unwrap_or(&temp_default);
+                let temp_entry = dir_entry.unwrap_or(temp_default);
                 temp_entry.print_dir_entry()?;
-                let dir_entries = DirEntries::default();
-                dir_entries
-                    .dir_entries
-                    .unwrap_or(Vec::new())
-                    .push(dir_entry?);
+                dir_entries.dir_entries.as_mut().unwrap().push(temp_entry);
             }
         }
         Ok(Self::default().expect("Failed to get DirEntry"))
