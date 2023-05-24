@@ -27,14 +27,15 @@ mod utils;
  */
 fn main() -> Result<()> {
     // Setup logger
-    logger::DesktopCleanerLogger::init(log::LevelFilter::max()).unwrap();
-
-    // get args
-    let args = args::DesktopCleanerArgs::parse();
-    debug!("Args: {:?}", args);
-    // read config
+    //let args = args::DesktopCleanerArgs::parse();
     let config = config::DesktopCleanerConfig::init()?;
-    debug!("Config: {:?}", config.file_types);
+    println!("Config: {:?}", config.file_types);
+    let debug_level = config.map_debug_level();
+    println!("Debug Level: {:?}", debug_level);
+    logger::DesktopCleanerLogger::init(debug_level).unwrap();
+    // get args
+    //debug!("Args: {:?}", args);
+    // read config
 
     // get folders
     let folders = config.file_types.keys();
@@ -49,9 +50,9 @@ fn main() -> Result<()> {
     // get dir entries
     let mut dir_entries = handle_dir::DirEntries::default();
     handle_dir::DirEntry::get_dirs(&path, &mut dir_entries)?;
-    println!("---------------------------------");
+    debug!("---------------------------------");
     dir_entries.print_dir_entries()?;
-    println!("---------------------------------");
+    debug!("---------------------------------");
 
     // move files
 
