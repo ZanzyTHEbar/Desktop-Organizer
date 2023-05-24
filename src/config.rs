@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use directories::ProjectDirs;
-use log::{debug, info, warn};
 use opzioni::Config;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -31,29 +30,10 @@ impl DesktopCleanerConfig {
             let data = lock.read().unwrap();
             debug!("Config file: {:?}", config_path);
             //debug!("Config: {:?}", data.file_types);
-            let file_types = data.file_types.clone();
-            return Ok(Self { file_types });
-            // save the config
-            //config_file.save().unwrap();
-
-            // read the config
-            //let data = lock.read().unwrap();
-            //debug!("Config: {:?}", data.file_types);
-
-            //dbg!(DesktopCleanerConfig_path);
-            /* let DesktopCleanerConfig_file = std::fs::read_to_string(DesktopCleanerConfig_path);
-            let DesktopCleanerConfig: DesktopCleanerConfig = match DesktopCleanerConfig_file {
-                Ok(file) => toml::from_str(&file),
-                Err(_) => {
-                    warn!("Failed to read DesktopCleanerConfig file, creating default DesktopCleanerConfig file");
-                    Ok(DesktopCleanerConfig {
-                        file_types: HashMap::new(),
-                    })
-                }
-            }
-            .map_err(|e| Error::Generic(e.to_string()))?; */
+            return Ok(Self {
+                file_types: data.file_types.clone(),
+            });
         }
-
-        Ok(Self::new().expect("Failed to create default DesktopCleanerConfig file"))
+        Ok(Self::new().expect("Failed to load DesktopCleaner Config file"))
     }
 }

@@ -2,6 +2,7 @@
 extern crate log;
 use crate::prelude::*;
 
+mod args;
 mod config;
 mod error;
 mod handle_dir;
@@ -32,15 +33,14 @@ fn main() -> Result<()> {
     let config = config::DesktopCleanerConfig::init()?;
     debug!("Config: {:?}", config.file_types);
 
-    let code = config.file_types.get("CODE").unwrap();
+    // get folders
+    let folders = config.file_types.keys();
 
-    // loop through each file type
-
-    for file_type in code {
-        debug!("File type: {}", file_type);
+    for folder in folders {
+        debug!("Folder: {}", folder);
     }
 
-    // detect OS and get the appropriate directory
+    // get the appropriate directory from the user- if none provided use the default for their desktop
 
     // get dir entries
 
@@ -51,7 +51,7 @@ fn main() -> Result<()> {
     // TODO: create global files moved counter
     // TODO: write main logic loop
 
-    handle_dir::DirEntry::get_dir_entry("./".to_string())?;
-
+    let path = std::path::PathBuf::from("./");
+    handle_dir::DirEntry::get_dirs(&path)?;
     Ok(())
 }
