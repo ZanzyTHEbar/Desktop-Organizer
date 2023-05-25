@@ -63,10 +63,10 @@ jobs:
           MINIFY: "yes"
       - name: Verify Build
         run: |
-          ls -la src/target/release/
           ls -la
+          ls -la target/
+          ls -la target/release/
           
-
       #- uses: actions/upload-artifact@v2
       #  with:
       #    name: production-files
