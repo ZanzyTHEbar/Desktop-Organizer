@@ -164,7 +164,7 @@
         "addReleases": "bottom",
         "assets": [
           {
-            "path": "./dist/**/*"
+            "path": "./dist/**/*.{msi,deb,rpm,AppImage,dmg,zip,sha256sum}"
           }
         ]
       }
