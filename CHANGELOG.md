@@ -3,6 +3,23 @@
 [![semantic versioning](https://img.shields.io/badge/semantic%20versioning-2.0.0-green.svg)](https://semver.org)
 > All notable changes to this project will be documented in this file
 
+## [1.3.0](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.2.1...v1.3.0) (2023-05-25)
+
+
+### 🐛 Bug Fixes
+
+* improve cli ([f9fbdb4](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/f9fbdb4ecbf572b6f5b69d73d15c99efe2a6b241))
+
+
+### 🔁 Continuous Integration
+
+* **ci-fix:** fix released files ([79dc992](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/79dc992959c25188baf858a0a68117d04df4be1a))
+
+
+### 🍕 Features
+
+* add default target for custom logger ([a76f1a1](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/a76f1a155acb3b4d7100d39e247f5edf7575a844))
+
 ## [1.2.1](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.2.0...v1.2.1) (2023-05-25)
 
 
