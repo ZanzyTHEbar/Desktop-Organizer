@@ -1,8 +1,55 @@
 # Desktop Cleaner
 
-This is a simple python script that helps you to clean your desktop by moving specific groups of files to a designated folder.
+This is a simple tool that helps you to clean your desktop (or any directory) by moving specific groups of file types to a designated folder.
+
+Currently, this tool does not support moving files between mount points/file systems. This is because the tool uses the `rename` function from the `std::fs` module, which does not support moving files between mount points/file systems.
+
+This tool also does not support a target folder that is not a subdirectory of the source folder.
+
+You pass in a directory, and the tool will organize that directory by moving files of specific types to a designated folder within that directory.
+
+You can configure the file types and the folders in the config file.
+
+if you do not specify a path, the tool will use your desktop, if a desktop cannot be found, it will use your home.
+
+You can always use the `.` path to specify the current directory.
+
+## Development
+
+- [x] Add support for config file
+- [x] Add support for custom file types
+- [x] Add support for custom folders
+- [ ] Add support for subdirectories
+- [ ] Add colors to the output
+- [ ] Add installers
+- [ ] Sign releases
 
 ## Usage
+
+```bash
+desktop_cleaner [OPTIONS] [PATH]
+```
+
+### Options
+
+```bash
+--help, -h      Prints help information
+--version, -v   Prints version information
+```
+
+### Arguments
+
+```bash
+PATH            The path to the folder you want to clean
+```
+
+## Installation
+
+You can install from the releases or build from source.
+
+> **Warning**: MacOS users will have to build from source, as I do not have a Mac to build the executable on, yet.
+> If you have a Mac and would like to help, please open an issue, I will be very grateful.
+> Otherwise, if you feel like supporting me, check out my Github Sponsors Page, I will be very grateful too :smile:
 
 ### Releases
 
@@ -11,51 +58,41 @@ This is a simple python script that helps you to clean your desktop by moving sp
 > **Warning**: Releases are not signed, so you will get a warning from your OS when you try to download and run the executable, this is normal and you can safely ignore it.
 
 1. Download the latest release from [here](https://github.com/ZanzyTHEbar/Desktop-Cleaner/releases)
-2. Run the executable
+2. Place the executable somewhere on your computer
+3. Add the location of the executable to your PATH
 
 ### From source
 
 1. Clone the repository
-2. Run the script
+2. Make sure rust is installed (if not, follow the instructions [here](https://www.rust-lang.org/tools/install))
 
 ```bash
-python3 src/desktop-cleaner.py
+cargo build --release
 ```
 
-## Build from source
-
-1. Clone the repository
-2. Install pyinstaller (if not already installed)
+Or to build and install
 
 ```bash
-pip3 install pyinstaller
+cargo build --release && install --path <path>
 ```
 
-3. Build the executable
+To test the executable
 
 ```bash
-pyinstaller --onefile src/desktop-cleaner.py
+cargo run <args for executable>
+```
+
+Example:
+
+```bash
+cargo run -- -h
 ```
 
 ## List of file types
 
-> **Note**: I am working on setting up a config file to make it easier to add/remove file types and change their associated folders.
+Please see the [config file](/docs/.desktop_cleaner.toml) for an example.
 
-```bash
-"CODE": [".c", ".h", ".py", ".rs", ".go", ".js", "ts", ".jsx", "tsx", ".html", ".css", ".php", ".java", ".cpp", ".cs", ".vb", ".sql", ".pl", ".swift", ".kt", ".r", ".m", ".asm"],
-"MARKUP": [".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log", ".md"],
-"NOTES": [".md", ".rtf", ".txt"],
-"DOCS": [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"],
-"EXE": [".exe", ".appimage", ".msi"],
-"VIDS": [".mp4", ".mov", ".avi", ".mkv"],
-"COMPRESSED": [".zip", ".rar", ".tar", ".gz", ".7z"],
-"SCRIPTS": [".sh", ".bat"],
-"INSTALLERS": [".deb", ".rpm"],
-"BOOKS": [".epub", ".mobi"],
-"MUSIC": [".mp3", ".wav", ".ogg", ".flac"],
-"PDFS": [".pdf"],
-"PICS": [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"],
-```
+The list of file types and their associated folders is only limited by your imagination (and the rules of your OS).
 
 ## License
 
