@@ -2,8 +2,8 @@
 name = "desktop_cleaner"
 version = "1.2.0"
 edition = "2021"
-authors = ["DaOfficialWizard"]
-description = "A simple program to clean your desktop"
+author = "DaOfficialWizard"
+description = "A simple CLI utility to organize your desktop (or a specified directory)"
 license = "MIT"
 repository = "https://github.com/ZanzyTHEbar/Desktop-Cleaner"
 readme = "README.md"
