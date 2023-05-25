@@ -15,8 +15,8 @@ mod utils;
 /**  
  *  Logic Loop
  *  1. Get config
- *  2. Get dir entries by detecting the OS and then getting the directory to Desktop or home if config setting enabled
- *     iterating through the input path and creating a DirEntry struct for each entry
+ *  2. Get dir entries by getting the directory to Desktop or home if no directory passed in
+ *     and then iterating through the input path and creating a DirEntry struct for each entry
  *  3. Iterate through each DirEntry and move the file to the appropriate folder
  *   - If the file is a symlink, skip it
  *   - If the file is a hidden file, skip it
@@ -24,7 +24,6 @@ mod utils;
  *   - If the file is a directory, recursively call the function if that config option is enabled
  *   - If the file is not a directory, move the file to the appropriate folder
  *  4. Print the number of files moved
- *  5. Save the config if the config has been modified
  */
 fn main() -> Result<()> {
     // get args
@@ -44,29 +43,19 @@ fn main() -> Result<()> {
     debug!("Debug Level: {:?}", debug_level);
 
     let mut directory = cli_args.directory.unwrap_or_else(|| {
-        debug!("Failed to get directory, using the default for your OS");
+        debug!("No Args passed for directory, using the default for your OS");
         String::from("")
     });
 
     let mut recursive = cli_args.recursive.unwrap_or_else(|| {
-        debug!("Failed to get recursive, using the default for your OS");
+        debug!("No Args passed for recursive, will  ignore subdirectories");
         false
     });
 
-    let mut hidden = cli_args.hidden.unwrap_or_else(|| {
-        debug!("Failed to get hidden, using the default for your OS");
+    /* let mut hidden = cli_args.hidden.unwrap_or_else(|| {
+        debug!("No Args passed for hidden, will not ignore hidden files");
         false
-    });
-
-    for (key, value) in config.file_types.iter() {
-        debug!("Key: {}, Value: {:?}", key, value);
-    }
-
-    // get folders
-    let folders = config.file_types.keys();
-    for folder in folders {
-        debug!("Folder: {}", folder);
-    }
+    }); */
 
     // get user dirs
     // Linux	XDG_DESKTOP_DIR	/home/alice/Desktop
@@ -102,7 +91,7 @@ fn main() -> Result<()> {
     // iterate over each dir entry and compare the file type to the config file types
     for dir_entry in dir_entries.dir_entries.unwrap() {
         if !dir_entry.is_dir {
-            for (key, value) in config.file_types.iter() {
+            for (key, value) in config.file_types.as_ref().unwrap().iter() {
                 // prefix the file type with a period
                 let mut file_type = String::from(".");
                 file_type.push_str(dir_entry.file_type.as_str());
@@ -137,9 +126,9 @@ fn main() -> Result<()> {
     }
 
     match files_moved {
-        0 => println!("No files moved"),
-        1 => println!("Moved 1 file"),
-        _ => println!("Moved {} files", files_moved),
+        0 => println!("[Desktop Cleaner]: Nothing to Do"),
+        1 => println!("[Desktop Cleaner]: Moved 1 file"),
+        _ => println!("[Desktop Cleaner]: Moved {} files", files_moved),
     }
 
     Ok(())

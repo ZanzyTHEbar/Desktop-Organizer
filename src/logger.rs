@@ -37,7 +37,7 @@ impl Log for DesktopCleanerLogger {
     fn log(&self, record: &Record) {
         // Check if the record is matched by the logger before logging
         if self.inner.matches(record) {
-            println!("{} - {}", record.level(), record.args());
+            println!("[Desktop Cleaner - {}]: {}", record.level(), record.args());
         }
     }
 

@@ -34,7 +34,6 @@ MARKUP = [
     ".cfg",
     ".conf",
     ".log",
-    ".md",
 ]
 NOTES = [".md", ".rtf", ".txt"]
 DOCS = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
@@ -47,3 +46,7 @@ BOOKS = [".epub", ".mobi"]
 MUSIC = [".mp3", ".wav", ".ogg", ".flac"]
 PDFS = [".pdf"]
 PICS = [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"]
+TORRENTS = [".torrent"]
+
+[debug]
+LEVEL = "info"

@@ -8,14 +8,14 @@ const QUALIFIERS: [&str; 3] = ["com", "prometheon_technologies", "desktop_cleane
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct DesktopCleanerConfig {
-    pub file_types: HashMap<String, Vec<String>>,
+    pub file_types: Option<HashMap<String, Vec<String>>>,
     pub debug: Option<HashMap<String, String>>,
 }
 
 impl DesktopCleanerConfig {
     fn new() -> Result<Self> {
         Ok(Self {
-            file_types: HashMap::new(),
+            file_types: Some(HashMap::new()),
             debug: Some(HashMap::new()),
         })
     }
@@ -40,7 +40,14 @@ impl DesktopCleanerConfig {
     }
 
     pub fn map_debug_level(&self) -> log::LevelFilter {
-        let debug_level = match self.debug.as_ref().unwrap().get("LEVEL").unwrap().as_str() {
+        let debug_level = match self
+            .debug
+            .as_ref()
+            .unwrap()
+            .get("LEVEL")
+            .map(|level| level.as_str())
+            .unwrap_or("off")
+        {
             "trace" => log::LevelFilter::Trace,
             "debug" => log::LevelFilter::Debug,
             "info" => log::LevelFilter::Info,
