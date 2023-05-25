@@ -3,6 +3,48 @@
 [![semantic versioning](https://img.shields.io/badge/semantic%20versioning-2.0.0-green.svg)](https://semver.org)
 > All notable changes to this project will be documented in this file
 
+## [1.2.0](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.1.0...v1.2.0) (2023-05-25)
+
+
+### 🐛 Bug Fixes
+
+* config related bug ([3212346](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/3212346da91ac22b4b43bb2f4ecbcb071cb2063e))
+* fix directory walking function ([b6543ca](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/b6543ca5ff0b7ee11a3edabe64eb804cfb05aad5))
+* move generated dir entries into vector ([e906e8b](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/e906e8bdcf333a4941623134e1088c7558b240e6))
+
+
+### 🧑‍💻 Code Refactoring
+
+* clean up code and comments ([a3a8468](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/a3a8468c12263050a8d29f160964b4a6d8d85506))
+* clean up rust code ([6269a0a](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/6269a0ac4ec0c7a74bbfbb175985f0f273a8c07c))
+
+
+### 📝 Documentation
+
+* setup docs ([1235481](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/123548185a467e5feb3140e2ef1b9d0418120763))
+
+
+### 🍕 Features
+
+*  Merge pull request [#1](https://github.com/ZanzyTHEbar/Desktop-Cleaner/issues/1) from ZanzyTHEbar/feature/rust ([2655e04](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/2655e0462a06aa1cf137d5ae7adcffd33b23b96e))
+* add more traits ([8ed4e69](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/8ed4e691f96d44ccbf66b224cdefff1e878e08f7))
+* building config ([2539efa](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/2539efa388f7438ef320f6de4071fc733b487401))
+* config works ([83b966f](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/83b966fe941363b133a44f6fba3c4547f8b5d60b))
+* impl debug level in config ([0d77829](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/0d77829d0420508a03bb3215a6c83a84f0f7c8ce))
+* implement clap ([153cbe7](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/153cbe788c731b4aa189ad03c8ee87517e713312))
+* implement directory handler ([e347e0c](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/e347e0c1cf200f0ca2bc8c37cbc955ad785ad507))
+* initial rust impl ([b1fbad3](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/b1fbad3cfa3c03c515beff4f20a9b9088d6c77bb))
+* working program ([4daf6a5](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/4daf6a5eb63902540fb794e302c1423b58dc66f8))
+
+
+### 🔁 Continuous Integration
+
+* **ci-fix:** fix ci issues ([1be12a3](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/1be12a330a4f5f4e2a495448a35859a9bf502510))
+* **ci-fix:** fix ci issues ([7aa6147](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/7aa6147c0efdc7eb4c21ff1cc64aeba75e53499a))
+* **ci-fix:** fix ci issues ([718fd83](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/718fd830b64e110f3f78600cdabca37d0fc85a11))
+* **ci-fix:** fix ci issues ([1000bf1](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/1000bf11f093b52a2607572060f723cc47404b1e))
+* setup ci pipeline ([5b70479](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/5b7047933313f6699d1d696172cbd8a245e4b771))
+
 ## [1.1.0](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.0.0...v1.1.0) (2023-05-21)
 
 
