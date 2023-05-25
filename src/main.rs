@@ -47,10 +47,10 @@ fn main() -> Result<()> {
         String::from("")
     });
 
-    let mut recursive = cli_args.recursive.unwrap_or_else(|| {
+    /* let mut recursive = cli_args.recursive.unwrap_or_else(|| {
         debug!("No Args passed for recursive, will  ignore subdirectories");
         false
-    });
+    }); */
 
     /* let mut hidden = cli_args.hidden.unwrap_or_else(|| {
         debug!("No Args passed for hidden, will not ignore hidden files");
