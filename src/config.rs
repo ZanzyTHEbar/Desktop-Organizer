@@ -1,3 +1,4 @@
+use crate::logger::{dc_stderr, dc_stdout};
 use crate::prelude::*;
 use directories::ProjectDirs;
 use opzioni::Config;
@@ -64,29 +65,32 @@ impl DesktopCleanerConfig {
     fn create_config_dir() -> Result<()> {
         if let Some(project_dirs) = ProjectDirs::from(QUALIFIERS[0], QUALIFIERS[1], QUALIFIERS[2]) {
             let config_path = project_dirs.config_dir();
+            let config_file_path = config_path.join(CONFIG_FILE);
+            if config_file_path.exists() {
+                return Ok(());
+            }
+
             if !config_path.exists() {
-                eprintln!(
+                dc_stderr!(f!(
                     "Config Directory Doesn't Exist - Creating it: {:?}",
                     config_path
-                );
+                ));
                 std::fs::create_dir_all(config_path)?;
+            }
 
-                let config_path = project_dirs.config_dir().join(CONFIG_FILE);
-
-                eprintln!("Config File Path: {:?}", config_path);
-
-                if config_path.exists() {
-                    return Ok(());
-                }
-
-                eprintln!("Config File Doesn't Exist - Creating it: {:?}", config_path);
+            if config_path.exists() && !config_file_path.exists() {
+                dc_stderr!(f!("Config File Path: {:?}", config_file_path));
+                dc_stderr!(f!(
+                    "Config File Doesn't Exist - Creating it: {:?}",
+                    CONFIG_FILE
+                ));
 
                 let mut file = OpenOptions::new()
                     .write(true)
                     .create(true)
-                    .open(&config_path)?;
+                    .open(&config_file_path)?;
 
-                eprintln!("Config File Being Generated: {:?}", config_path);
+                dc_stderr!("Config File Being Generated");
 
                 let config = indoc::indoc! {"
                 [file_types]
@@ -98,15 +102,14 @@ impl DesktopCleanerConfig {
                     return Err(e.into());
                 }
 
-                eprintln!(
+                dc_stderr!(f!(
                     "Created config file at: {:?}",
-                    config_path.join(CONFIG_FILE)
-                );
+                    config_file_path.join(CONFIG_FILE)
+                ));
 
                 return Ok(());
             }
-            let config_path = project_dirs.config_dir().join(CONFIG_FILE);
-            eprintln!("Config Exists: {:?}", config_path);
+            dc_stderr!("Config Exists");
         }
         Ok(())
     }

@@ -43,3 +43,16 @@ impl Log for DesktopCleanerLogger {
 
     fn flush(&self) {}
 }
+
+#[macro_export]
+macro_rules! dc_stderr {
+    ($($arg:tt)+) => (eprintln!("[Desktop Cleaner]: {}", $($arg)+));
+}
+
+#[macro_export]
+macro_rules! dc_stdout {
+    ($($arg:tt)+) => (println!("[Desktop Cleaner]: {}", $($arg)+));
+}
+
+pub(crate) use dc_stderr;
+pub(crate) use dc_stdout;
