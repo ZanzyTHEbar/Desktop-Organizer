@@ -31,6 +31,9 @@ fn main() -> Result<()> {
     let cli_args = args::DesktopCleanerArgs::parse();
 
     // read config
+    // Linux	$XDG_CONFIG_HOME/_project_path_ or $HOME/.config/_project_path_	/home/alice/.config/barapp
+    // macOS	$HOME/Library/Application Support/_project_path_	/Users/Alice/Library/Application Support/com.Foo-Corp.Bar-App
+    // Windows	{FOLDERID_RoamingAppData}\_project_path_\config	C:\Users\Alice\AppData\Roaming\Foo Corp\Bar App\config
     let config = config::DesktopCleanerConfig::init()?;
     let debug_level = config.map_debug_level();
 

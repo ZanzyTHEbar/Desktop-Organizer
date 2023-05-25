@@ -4,6 +4,8 @@ use opzioni::Config;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+const QUALIFIERS: [&str; 3] = ["com", "prometheon_technologies", "desktop_cleaner"];
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct DesktopCleanerConfig {
     pub file_types: HashMap<String, Vec<String>>,
@@ -20,9 +22,8 @@ impl DesktopCleanerConfig {
 
     pub fn init() -> Result<Self> {
         const CONFIG_FILE: &str = ".desktop_cleaner.toml";
-        if let Some(project_dirs) =
-            ProjectDirs::from("com", "prometheon_technologies", "desktop_cleaner")
-        {
+        if let Some(project_dirs) = ProjectDirs::from(QUALIFIERS[0], QUALIFIERS[1], QUALIFIERS[2]) {
+            Self::create_config_dir()?;
             let config_path = project_dirs.config_dir().join(CONFIG_FILE);
             let config_file: Config<DesktopCleanerConfig> =
                 Config::<DesktopCleanerConfig>::configure()
@@ -49,5 +50,15 @@ impl DesktopCleanerConfig {
             _ => log::LevelFilter::Debug,
         };
         debug_level
+    }
+
+    fn create_config_dir() -> Result<()> {
+        if let Some(project_dirs) = ProjectDirs::from(QUALIFIERS[0], QUALIFIERS[1], QUALIFIERS[2]) {
+            let config_path = project_dirs.config_dir();
+            if !config_path.exists() {
+                std::fs::create_dir_all(config_path)?;
+            }
+        }
+        Ok(())
     }
 }
