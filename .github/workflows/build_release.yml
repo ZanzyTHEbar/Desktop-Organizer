@@ -23,6 +23,22 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest]
+        target:
+          [
+            x86_64-pc-windows-msvc,
+            x86_64-pc-windows-gnu,
+            x86_64-unknown-linux-gnu,
+            x86_64-unknown-linux-musl,
+          ]
+        #include:
+        #  - os: ubuntu-latest
+        #    rust_target: x86_64-unknown-linux-gnu
+        #  - os: windows-latest
+        #    rust_target: x86_64-pc-windows-msvc
+        #- os: macos-latest
+        #  rust_target: x86_64-apple-darwin
+        #- os: macos-latest
+        #  rust_target: aarch64-apple-darwin
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -30,20 +46,33 @@ jobs:
         with:
           token: ${{ env.GITHUB_TOKEN }}
 
-      - name: PyInstaller Windows
-        uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
+      #- name: PyInstaller Windows
+      #  uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
+      #  with:
+      #    path: src
+      #- name: PyInstaller Linux
+      #  uses: JackMcKew/pyinstaller-action-linux@python3.10
+      #  with:
+      #    path: src
+      - name: Compile and release
+        uses: rust-build/rust-build.action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path: src
+          RUSTTARGET: ${{ matrix.target }}
+          EXTRA_FILES: "README.md LICENSE"
+          ARCHIVE_TYPES: "zip"
+          MINIFY: "yes"
+      - name: Verify Build
+        run: |
+          ls -la src/target/release/
+          ls -la
+          
 
-      - name: PyInstaller Linux
-        uses: JackMcKew/pyinstaller-action-linux@python3.10
-        with:
-          path: src
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: production-files
-          path: src/dist
+      #- uses: actions/upload-artifact@v2
+      #  with:
+      #    name: production-files
+      #    path: src/target/release/
 
   deploy:
     runs-on: ubuntu-latest
