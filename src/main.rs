@@ -126,9 +126,9 @@ fn main() -> Result<()> {
     }
 
     match files_moved {
-        0 => println!("[Desktop Cleaner]: Nothing to Do"),
-        1 => println!("[Desktop Cleaner]: Moved 1 file"),
-        _ => println!("[Desktop Cleaner]: Moved {} files", files_moved),
+        0 => dc_stdout!("Nothing to Do"),
+        1 => dc_stdout!("Moved 1 file"),
+        _ => dc_stdout!(f!("Moved {} files", files_moved)),
     }
 
     Ok(())
