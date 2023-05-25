@@ -1,6 +1,6 @@
 [package]
 name = "desktop_cleaner"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 authors = ["DaOfficialWizard"]
 description = "A simple program to clean your desktop"

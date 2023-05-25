@@ -3,6 +3,13 @@
 [![semantic versioning](https://img.shields.io/badge/semantic%20versioning-2.0.0-green.svg)](https://semver.org)
 > All notable changes to this project will be documented in this file
 
+## [1.2.1](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.2.0...v1.2.1) (2023-05-25)
+
+
+### 🐛 Bug Fixes
+
+* auto-generate minimal config file ([5bada8a](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/5bada8abd78626984f47c4a9a00c4db62df403e0))
+
 ## [1.2.0](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.1.0...v1.2.0) (2023-05-25)
 
 
