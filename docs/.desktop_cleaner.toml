@@ -1,17 +1,17 @@
 # REQUIRED: specify the name of the folders mapped to each file type
 [file_types]
-NOTES = [".md", ".rtf", ".txt"]
-DOCS = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
+Notes = [".md", ".rtf", ".txt"]
+Docs = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
 EXE = [".exe", ".appimage", ".msi"]
-VIDS = [".mp4", ".mov", ".avi", ".mkv"]
-COMPRESSED = [".zip", ".rar", ".tar", ".gz", ".7z"]
-SCRIPTS = [".sh", ".bat"]
-INSTALLERS = [".deb", ".rpm"]
-BOOKS = [".epub", ".mobi"]
-MUSIC = [".mp3", ".wav", ".ogg", ".flac"]
+Vids = [".mp4", ".mov", ".avi", ".mkv"]
+Compressed = [".zip", ".rar", ".tar", ".gz", ".7z"]
+Scripts = [".sh", ".bat"]
+Installers = [".deb", ".rpm"]
+Books = [".epub", ".mobi"]
+Music = [".mp3", ".wav", ".ogg", ".flac"]
 PDFS = [".pdf"]
-PICS = [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"]
-TORRENTS = [".torrent"]
+Pics = [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"]
+Torrents = [".torrent"]
 CODE = [
     ".c",
     ".h",
@@ -37,7 +37,7 @@ CODE = [
     ".m",
     ".asm",
 ]
-MARKUP = [
+Markup = [
     ".json",
     ".xml",
     ".yml",
@@ -51,4 +51,4 @@ MARKUP = [
 
 # OPTIONAL: debug level for stdout logging. if not specified, defaults to "off"
 [debug]
-LEVEL = "info" # "info", "debug", "warn", "error", "trace", "off"
+level = "info" # "info", "debug", "warn", "error", "trace", "off"

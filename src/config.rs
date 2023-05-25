@@ -3,8 +3,11 @@ use directories::ProjectDirs;
 use opzioni::Config;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
 
 const QUALIFIERS: [&str; 3] = ["com", "prometheon_technologies", "desktop_cleaner"];
+const CONFIG_FILE: &str = ".desktop_cleaner.toml";
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct DesktopCleanerConfig {
@@ -21,7 +24,6 @@ impl DesktopCleanerConfig {
     }
 
     pub fn init() -> Result<Self> {
-        const CONFIG_FILE: &str = ".desktop_cleaner.toml";
         if let Some(project_dirs) = ProjectDirs::from(QUALIFIERS[0], QUALIFIERS[1], QUALIFIERS[2]) {
             Self::create_config_dir()?;
             let config_path = project_dirs.config_dir().join(CONFIG_FILE);
@@ -44,9 +46,9 @@ impl DesktopCleanerConfig {
             .debug
             .as_ref()
             .unwrap()
-            .get("LEVEL")
+            .get("level")
             .map(|level| level.as_str())
-            .unwrap_or("off")
+            .unwrap_or("info")
         {
             "trace" => log::LevelFilter::Trace,
             "debug" => log::LevelFilter::Debug,
@@ -63,8 +65,48 @@ impl DesktopCleanerConfig {
         if let Some(project_dirs) = ProjectDirs::from(QUALIFIERS[0], QUALIFIERS[1], QUALIFIERS[2]) {
             let config_path = project_dirs.config_dir();
             if !config_path.exists() {
+                eprintln!(
+                    "Config Directory Doesn't Exist - Creating it: {:?}",
+                    config_path
+                );
                 std::fs::create_dir_all(config_path)?;
+
+                let config_path = project_dirs.config_dir().join(CONFIG_FILE);
+
+                eprintln!("Config File Path: {:?}", config_path);
+
+                if config_path.exists() {
+                    return Ok(());
+                }
+
+                eprintln!("Config File Doesn't Exist - Creating it: {:?}", config_path);
+
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .open(&config_path)?;
+
+                eprintln!("Config File Being Generated: {:?}", config_path);
+
+                let config = indoc::indoc! {"
+                [file_types]
+                
+                [debug]
+                "};
+
+                if let Err(e) = writeln!(file, "{}", config) {
+                    return Err(e.into());
+                }
+
+                eprintln!(
+                    "Created config file at: {:?}",
+                    config_path.join(CONFIG_FILE)
+                );
+
+                return Ok(());
             }
+            let config_path = project_dirs.config_dir().join(CONFIG_FILE);
+            eprintln!("Config Exists: {:?}", config_path);
         }
         Ok(())
     }

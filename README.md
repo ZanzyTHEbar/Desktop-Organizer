@@ -19,6 +19,7 @@ You can always use the `.` path to specify the current directory.
 - [x] Add support for config file
 - [x] Add support for custom file types
 - [x] Add support for custom folders
+- [x] Automatically create config file if it does not exist
 - [ ] Add support for subdirectories
 - [ ] Add colors to the output
 - [ ] Add installers

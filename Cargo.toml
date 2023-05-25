@@ -20,6 +20,7 @@ thiserror = "1"
 toml = "0.7.4"
 directories = "5.0.1"
 tracing = "0.1.37"
+indoc = "2"
 
 [dependencies.opzioni]
 version = "0.1.3"
