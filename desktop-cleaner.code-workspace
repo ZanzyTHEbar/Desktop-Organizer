@@ -58,6 +58,7 @@
       "Automagically",
       "barapp",
       "Deque",
+      "dialoguer",
       "direntry",
       "flac",
       "FOLDERID",
@@ -69,7 +70,8 @@
       "PDFS",
       "prometheon",
       "subcmd",
-      "thiserror"
+      "thiserror",
+      "uninlined"
     ],
     "[python]": {
       "editor.defaultFormatter": "ms-python.black-formatter"

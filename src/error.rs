@@ -6,4 +6,6 @@ pub enum Error {
     Generic(String),
     #[error(transparent)]
     IO(#[from] std::io::Error),
+    #[error("Operation Canceled error: {0}")]
+    OperationCancelled(String),
 }

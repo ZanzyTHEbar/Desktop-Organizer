@@ -1,4 +1,4 @@
-use crate::logger::{dc_stderr, dc_stdout};
+use crate::logger::dc_stderr;
 use crate::prelude::*;
 use directories::ProjectDirs;
 use opzioni::Config;
@@ -74,16 +74,16 @@ impl DesktopCleanerConfig {
                 dc_stderr!(f!(
                     "Config Directory Doesn't Exist - Creating it: {:?}",
                     config_path
-                ));
+                )
+                .as_str());
                 std::fs::create_dir_all(config_path)?;
             }
 
             if config_path.exists() && !config_file_path.exists() {
-                dc_stderr!(f!("Config File Path: {:?}", config_file_path));
-                dc_stderr!(f!(
-                    "Config File Doesn't Exist - Creating it: {:?}",
-                    CONFIG_FILE
-                ));
+                dc_stderr!(f!("Config File Path: {:?}", config_file_path).as_str());
+                dc_stderr!(
+                    f!("Config File Doesn't Exist - Creating it: {:?}", CONFIG_FILE).as_str()
+                );
 
                 let mut file = OpenOptions::new()
                     .write(true)
@@ -105,7 +105,8 @@ impl DesktopCleanerConfig {
                 dc_stderr!(f!(
                     "Created config file at: {:?}",
                     config_file_path.join(CONFIG_FILE)
-                ));
+                )
+                .as_str());
 
                 return Ok(());
             }
