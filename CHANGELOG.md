@@ -3,6 +3,13 @@
 [![semantic versioning](https://img.shields.io/badge/semantic%20versioning-2.0.0-green.svg)](https://semver.org)
 > All notable changes to this project will be documented in this file
 
+## [1.3.1](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.3.0...v1.3.1) (2023-05-27)
+
+
+### 🧑‍💻 Code Refactoring
+
+* total project refactor ([3f3a8bb](https://github.com/ZanzyTHEbar/Desktop-Cleaner/commit/3f3a8bb5a72e392996c100d49021412cb7e6e8ee))
+
 ## [1.3.0](https://github.com/ZanzyTHEbar/Desktop-Cleaner/compare/v1.2.1...v1.3.0) (2023-05-25)
 
 

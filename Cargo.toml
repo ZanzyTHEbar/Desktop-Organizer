@@ -1,6 +1,6 @@
 [package]
 name = "desktop_cleaner"
-version = "1.3.0"
+version = "1.3.1"
 edition = "2021"
 author = "DaOfficialWizard"
 description = "A simple CLI utility to organize your desktop (or a specified directory)"
@@ -10,6 +10,10 @@ readme = "README.md"
 keywords = ["desktop", "cleaner", "clean", "organize"]
 categories = ["utility", "command-line-utilities", "desktop", "cleaner", "clean", "organize"]
 rust-version = "1.68"
+
+[package.metadata.deb]
+section = "utility"
+extended-description = "Desktop Cleaner (dra) is a command line tool\nto organize your desktop (or a specified directory)\nby moving files into folders based on their extension.\n"
 
 [dependencies]
 log = "^0.4.17"
@@ -56,11 +60,3 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
-
-[package.metadata.deb]
-section = "utility"
-extended-description = """\
-Desktop Cleaner (dra) is a command line tool
-to organize your desktop (or a specified directory)
-by moving files into folders based on their extension.
-"""
