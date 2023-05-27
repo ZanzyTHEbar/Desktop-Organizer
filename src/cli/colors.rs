@@ -51,7 +51,7 @@ impl<'a> Color<'a> {
         }
     }
 
-    pub fn yellow(self) -> Self {
+    /* pub fn yellow(self) -> Self {
         Color {
             inner: self.inner.yellow(),
         }
@@ -67,7 +67,7 @@ impl<'a> Color<'a> {
         Color {
             inner: self.inner.magenta(),
         }
-    }
+    } */
 
     pub fn cyan(self) -> Self {
         Color {
