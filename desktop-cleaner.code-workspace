@@ -48,7 +48,6 @@
     "[typescriptreact]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "powershell.cwd": "c:\\Users\\zacar\\Documents\\GitHub\\EyeTrackVR\\GUI\\ETVR",
     "[shellscript]": {
       "editor.defaultFormatter": "shakram02.bash-beautify"
     },
