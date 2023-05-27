@@ -1,6 +1,5 @@
 pub mod colors;
 pub mod completion;
-mod directory;
 pub mod clean;
 pub mod root_command;
 
