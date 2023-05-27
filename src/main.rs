@@ -40,6 +40,12 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// TODO: move to `walkdir` crate
+// TODO: impl skipping hidden files
+// TODO. impl skipping symlinks
+// TODO: impl searching subdirectories
+// TODO: impl creating sub directories
+// TODO: impl support for other mount points  and targeting a specific destination
 fn run(cli: Cli) -> Result<()> {
     match cli.cmd {
         Command::Clean {
