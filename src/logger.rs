@@ -1,8 +1,8 @@
 //! Crate Logger
-
+pub use crate::cli::colors::Color;
 use env_logger::filter::{Builder, Filter};
-
 use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
+use std::format as f;
 
 pub struct DesktopCleanerLogger {
     inner: Filter,
@@ -35,9 +35,25 @@ impl Log for DesktopCleanerLogger {
     }
 
     fn log(&self, record: &Record) {
-        // Check if the record is matched by the logger before logging
         if self.inner.matches(record) {
-            println!("[Desktop Cleaner - {}]: {}", record.level(), record.args());
+            println!(
+                "{}",
+                format_args!(
+                    "{} {}",
+                    Color::new(
+                        f!(
+                            "[Desktop Cleaner - {}]:",
+                            Color::new(record.level().as_str())
+                                .map_level(record.level())
+                                .bold(),
+                        )
+                        .as_str()
+                    )
+                    .bold()
+                    .green(),
+                    Color::new(f!("{}", record.args()).as_str()).cyan()
+                )
+            );
         }
     }
 
@@ -46,12 +62,12 @@ impl Log for DesktopCleanerLogger {
 
 #[macro_export]
 macro_rules! dc_stderr {
-    ($($arg:tt)+) => (eprintln!("[Desktop Cleaner]: {}", $($arg)+));
+    ($($arg:tt)+) => (eprintln!("{}", f!("{} {}", Color::new("[Desktop Cleaner]:").bold().green(), Color::new($($arg)+).red())));
 }
 
 #[macro_export]
 macro_rules! dc_stdout {
-    ($($arg:tt)+) => (println!("[Desktop Cleaner]: {}", $($arg)+));
+    ($($arg:tt)+) => (println!("{}", f!("{} {}", Color::new("[Desktop Cleaner]:").bold().green(), Color::new($($arg)+).green())));
 }
 
 pub(crate) use dc_stderr;

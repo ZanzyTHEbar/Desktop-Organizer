@@ -84,11 +84,12 @@ impl DirEntry {
 
             for entry in entries {
                 debug!("{:?}", entry);
-                let file_name = entry
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .ok_or_else(|| Error::Generic(f!("Invalid Path {entry:?}")))?;
+                let file_name = entry.file_name().unwrap().to_str().ok_or_else(|| {
+                    Error::IO(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        f!("Invalid Path {entry:?}"),
+                    ))
+                })?;
                 let file_type = match entry.extension() {
                     Some(ext) => ext.to_str().unwrap().to_string(),
                     None => "".to_string(),

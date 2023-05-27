@@ -1,10 +1,17 @@
+// NOTE: this rule is not supported by rust-analyzer or JetBrains Rust plugin go to definition/refactoring tools so disable it until it's supported properly
+#![allow(clippy::uninlined_format_args)]
+
 #[macro_use]
 extern crate log;
 use crate::prelude::*;
 use clap::Parser;
-use directories::UserDirs;
 
-mod args;
+use crate::cli::clean::CleanHandler;
+use crate::cli::colors::Color;
+use crate::cli::completion::CompletionHandler;
+use crate::cli::root_command::{Cli, Command};
+
+mod cli;
 mod config;
 mod error;
 mod handle_dir;
@@ -12,7 +19,7 @@ mod logger;
 mod prelude;
 mod utils;
 
-/**  
+/**
  *  Logic Loop
  *  1. Get config
  *  2. Get dir entries by getting the directory to Desktop or home if no directory passed in
@@ -27,109 +34,54 @@ mod utils;
  */
 fn main() -> Result<()> {
     // get args
-    let cli_args = args::DesktopCleanerArgs::parse();
-
-    // read config
-    // Linux	$XDG_CONFIG_HOME/_project_path_ or $HOME/.config/_project_path_	/home/alice/.config/barapp
-    // macOS	$HOME/Library/Application Support/_project_path_	/Users/Alice/Library/Application Support/com.Foo-Corp.Bar-App
-    // Windows	{FOLDERID_RoamingAppData}\_project_path_\config	C:\Users\Alice\AppData\Roaming\Foo Corp\Bar App\config
-    let config = config::DesktopCleanerConfig::init()?;
-    let debug_level = config.map_debug_level();
-
-    // Setup logger
-    logger::DesktopCleanerLogger::init(debug_level).unwrap();
-
-    debug!("Config: {:?}", config.file_types);
-    debug!("Debug Level: {:?}", debug_level);
-
-    let mut directory = cli_args.directory.unwrap_or_else(|| {
-        debug!("No Args passed for directory, using the default for your OS");
-        String::from("")
-    });
-
-    /* let mut recursive = cli_args.recursive.unwrap_or_else(|| {
-        debug!("No Args passed for recursive, will  ignore subdirectories");
-        false
-    }); */
-
-    /* let mut hidden = cli_args.hidden.unwrap_or_else(|| {
-        debug!("No Args passed for hidden, will not ignore hidden files");
-        false
-    }); */
-
-    // get user dirs
-    // Linux	XDG_DESKTOP_DIR	/home/alice/Desktop
-    // macOS	$HOME/Desktop	/Users/Alice/Desktop
-    // Windows  {FOLDERID_Desktop}	C:\Users\Alice\Desktop
-    if debug_level != log::LevelFilter::Off {
-        debug!("Debugging enabled");
-    }
-
-    if directory.is_empty() {
-        if let Some(user_dirs) = UserDirs::new() {
-            let path = user_dirs.desktop_dir().unwrap_or_else(|| {
-                warn!("Failed to get desktop dir, using the home dir instead");
-                user_dirs.home_dir()
-            });
-            debug!("Location Dir: {:?}", path);
-            directory = path.to_str().unwrap().to_string();
-        }
-    }
-    // get the appropriate directory from the user- if none provided use the default for their desktop
-    let path = std::path::PathBuf::from(directory);
-
-    // get dir entries
-    let mut dir_entries = handle_dir::DirEntries::default();
-    handle_dir::DirEntry::get_dirs(&path, &mut dir_entries)?;
-    debug!("---------------------------------");
-    dir_entries.print_dir_entries()?;
-    debug!("---------------------------------");
-
-    // move files
-    let mut files_moved = 0;
-
-    // iterate over each dir entry and compare the file type to the config file types
-    for dir_entry in dir_entries.dir_entries.unwrap() {
-        if !dir_entry.is_dir {
-            for (key, value) in config.file_types.as_ref().unwrap().iter() {
-                // prefix the file type with a period
-                let mut file_type = String::from(".");
-                file_type.push_str(dir_entry.file_type.as_str());
-                if value.contains(&file_type) {
-                    info!("File Type: {}", file_type);
-                    let mut new_path = path.join(key);
-                    std::fs::create_dir_all(&new_path)?;
-                    // append the file name to the new path
-                    new_path = new_path.join(dir_entry.file_name.clone());
-                    info!("New Path: {:?}", new_path);
-                    // rename the file
-                    std::fs::rename(&dir_entry.path, &new_path)?;
-                    files_moved += 1;
-                    println!("Moved {} to {}", dir_entry.file_name, key);
-                    // if the file is a symlink, skip it
-                    // if the file is a hidden file, skip it
-                    // if the file is a directory, recursively call the function if that config option is enabled
-                }
-            }
-        } else {
-            /* if recursive {
-                debug!("Recursive enabled");
-                // recursively call the function if that config option is enabled
-                let path = dir_entry.path.clone();
-                let mut dir_entries = handle_dir::DirEntries::default();
-                handle_dir::DirEntry::get_dirs(&path, &mut dir_entries)?;
-                debug!("---------------------------------");
-                dir_entries.print_dir_entries()?;
-                debug!("---------------------------------");
-            } */
-        }
-    }
-
-    match files_moved {
-        0 => dc_stdout!("Nothing to Do"),
-        1 => dc_stdout!("Moved 1 file"),
-        _ => dc_stdout!(f!("Moved {} files", files_moved)),
-    }
-
+    let cli = Cli::parse();
+    init_ctrl_c_handler();
+    handle(run(cli));
     Ok(())
+}
+
+// TODO: move to `walkdir` crate
+// TODO: impl skipping hidden files
+// TODO. impl skipping symlinks
+// TODO: impl searching subdirectories
+// TODO: impl creating sub directories
+// TODO: impl support for other mount points  and targeting a specific destination
+fn run(cli: Cli) -> Result<()> {
+    match cli.cmd {
+        Command::Clean {
+            directory,
+            //recursive,
+            //hidden,
+        } => CleanHandler::new(directory, None, None).run(),
+        Command::Completion { shell } => CompletionHandler::new(shell).run(),
+    }
+}
+
+// NOTE: this is needed to restore the cursor if CTRL+C is
+// pressed during the asset selection (https://github.com/mitsuhiko/dialoguer/issues/77)
+fn init_ctrl_c_handler() {
+    ctrlc::set_handler(move || {
+        let term = dialoguer::console::Term::stderr();
+        let _ = term.show_cursor();
+        std::process::exit(1);
+    })
+    .expect("Error initializing CTRL+C handler")
+}
+
+fn handle(result: Result<()>) {
+    if let Err(error) = result {
+        match error {
+            Error::Generic(msg) => {
+                dc_stderr!(&msg);
+                std::process::exit(1)
+            }
+            Error::OperationCancelled(msg) => {
+                dc_stdout!(f!("Operation cancelled: {}", Color::new(&msg).bold()).as_str());
+            }
+            Error::IO(error) => {
+                dc_stderr!(&error.to_string());
+                std::process::exit(1)
+            }
+        }
+    }
 }
