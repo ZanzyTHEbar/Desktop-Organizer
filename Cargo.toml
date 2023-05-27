@@ -60,7 +60,7 @@ strip = true
 [package.metadata.deb]
 section = "utility"
 extended-description = """\
-Desktop Cleaner (dra) is a command line tool
+Desktop Cleaner is a command line tool
 to organize your desktop (or a specified directory)
 by moving files into folders based on their extension.
 """
