@@ -1,3 +1,0 @@
-[env]
-# RUST_BACKTRACE = 1  # Enable backtraces
-RUST_LOG = "info" # Set to "debug" for more verbose output, debug, info, warn, error

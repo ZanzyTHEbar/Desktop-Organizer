@@ -1,6 +1,35 @@
-dist
-build
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-# Added by cargo
+# Build
+build/
+bin/
 
-/target
+# Dependency directories
+vendor/
+
+# Environment variables and configuration files
+
+.env
+
+# Extras
+*.DS_Store
+*.bak
+*.swp
+*.tmp
+*tmp
+*.log
+*.out
+*.gz
+*.zip
+*.tar
+*.rar
+*.7z
+*.apk
+/test-proj
+/extras
+.rs-old/
