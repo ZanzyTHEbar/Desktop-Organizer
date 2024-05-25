@@ -23,6 +23,8 @@ var ConfigFile string
 var HomeDir string
 var HomeDCDir string
 
+var ProjectRoot string
+
 type DebugLevelType string
 
 const (
