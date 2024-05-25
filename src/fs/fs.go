@@ -23,11 +23,21 @@ var ConfigFile string
 var HomeDir string
 var HomeDCDir string
 
-var ProjectRoot string
+type DebugLevelType string
+
+const (
+	DebugLevelInfo  DebugLevelType = "info"
+	DebugLevelDebug DebugLevelType = "debug"
+	DebugLevelWarn  DebugLevelType = "warn"
+	DebugLevelError DebugLevelType = "error"
+	DebugLevelTrace DebugLevelType = "trace"
+	DebugLevelOff   DebugLevelType = "off"
+)
 
 // Config holds the mapping of file types to extensions
 type Config struct {
-	FileTypes map[string][]string
+	FileTypes  map[string][]string
+	DebugLevel DebugLevelType
 }
 
 func init() {
@@ -70,12 +80,32 @@ func init() {
 	if HomeDCDir != "" {
 		ProjectRoot = Cwd
 	}
+
+	ConfigFile = filepath.Join(HomeDCDir, "config.ini")
+
+	// Load the configuration file
+	_, err = LoadConfig(ConfigFile)
+	if err != nil {
+		// term.OutputErrorAndExit("Error loading configuration: %v", err)
+	}
 }
 
 // LoadConfig loads the configuration from an ini file
 func LoadConfig(filePath string) (*Config, error) {
 	if _, err := os.Stat(filePath); errors.Is(err, fs.ErrNotExist) {
-		return nil, term.OutputErrorAndExit("config file does not exist: %s", filePath)
+		// Couldn't load the config file, so create it
+		cfg := ini.Empty()
+
+		// Write the default configuration to the file
+		err = cfg.ReflectFrom(getDefaultConfig())
+		if err != nil {
+			// term.OutputErrorAndExit("Error creating config file: %v", err)
+		}
+
+		err = cfg.SaveTo(ConfigFile)
+		if err != nil {
+			// term.OutputErrorAndExit("Error saving config file: %v", err)
+		}
 	}
 
 	cfg, err := ini.Load(filePath)
@@ -96,7 +126,47 @@ func LoadConfig(filePath string) (*Config, error) {
 		fileTypes[key.Name()] = extensions
 	}
 
-	return &Config{FileTypes: fileTypes}, nil
+	debugLevelStr := cfg.Section("debug").Key("level").MustString(string(DebugLevelOff))
+	debugLevel := DebugLevelType(debugLevelStr)
+
+	// Validate debug level
+	switch debugLevel {
+	case DebugLevelInfo, DebugLevelDebug, DebugLevelWarn, DebugLevelError, DebugLevelTrace, DebugLevelOff:
+		// valid debug level
+	default:
+		return nil, fmt.Errorf("invalid debug level: %s", debugLevel)
+	}
+
+	return &Config{FileTypes: fileTypes, DebugLevel: debugLevel}, nil
+}
+
+// getDefaultConfig returns the default configuration
+func getDefaultConfig() *Config {
+	return &Config{
+		FileTypes: map[string][]string{
+			"Notes":      {".md", ".rtf", ".txt"},
+			"Docs":       {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"},
+			"EXE":        {".exe", ".appimage", ".msi"},
+			"Vids":       {".mp4", ".mov", ".avi", ".mkv"},
+			"Compressed": {".zip", ".rar", ".tar", ".gz", ".7z"},
+			"Scripts":    {".sh", ".bat"},
+			"Installers": {".deb", ".rpm"},
+			"Books":      {".epub", ".mobi"},
+			"Music":      {".mp3", ".wav", ".ogg", ".flac"},
+			"PDFS":       {".pdf"},
+			"Pics":       {".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"},
+			"Torrents":   {".torrent"},
+			"CODE": {
+				".c", ".h", ".py", ".rs", ".go", ".js", ".ts", ".jsx", ".tsx", ".html",
+				".css", ".php", ".java", ".cpp", ".cs", ".vb", ".sql", ".pl", ".swift",
+				".kt", ".r", ".m", ".asm",
+			},
+			"Markup": {
+				".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log",
+			},
+		},
+		DebugLevel: "info",
+	}
 }
 
 func FindOrCreateDesktopCleaner() (string, bool, error) {
@@ -151,14 +221,14 @@ func IsGitRepo(dir string) bool {
 	return isGitRepo
 }
 
-type ProjectPaths struct {
+type CleanerPaths struct {
 	ActivePaths           map[string]bool
 	AllPaths              map[string]bool
 	DesktopCleanerIgnored *ignore.GitIgnore
 	IgnoredPaths          map[string]string
 }
 
-func GetProjectPaths(baseDir string) (*ProjectPaths, error) {
+func GetCleanerPaths(baseDir string) (*CleanerPaths, error) {
 	if ProjectRoot == "" {
 		return nil, fmt.Errorf("no project root found")
 	}
@@ -166,7 +236,7 @@ func GetProjectPaths(baseDir string) (*ProjectPaths, error) {
 	return GetPaths(baseDir, ProjectRoot)
 }
 
-func GetPaths(baseDir, currentDir string) (*ProjectPaths, error) {
+func GetPaths(baseDir, currentDir string) (*CleanerPaths, error) {
 	ignored, err := GetDesktopCleanerIgnore(currentDir)
 
 	if err != nil {
@@ -405,7 +475,7 @@ func GetPaths(baseDir, currentDir string) (*ProjectPaths, error) {
 		}
 	}
 
-	return &ProjectPaths{
+	return &CleanerPaths{
 		ActivePaths:           activePaths,
 		AllPaths:              allPaths,
 		DesktopCleanerIgnored: ignored,
