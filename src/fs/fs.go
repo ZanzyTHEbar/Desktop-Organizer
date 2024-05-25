@@ -42,6 +42,8 @@ type Config struct {
 	DebugLevel DebugLevelType
 }
 
+var InstanceConfig *Config
+
 func init() {
 	var err error
 	Cwd, err = os.Getwd()
@@ -86,7 +88,7 @@ func init() {
 	ConfigFile = filepath.Join(HomeDCDir, "config.ini")
 
 	// Load the configuration file
-	_, err = LoadConfig(ConfigFile)
+	InstanceConfig, err = LoadConfig(ConfigFile)
 	if err != nil {
 		// term.OutputErrorAndExit("Error loading configuration: %v", err)
 	}
