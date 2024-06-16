@@ -1,15 +1,14 @@
 package auth
 
 import (
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"fmt"
 	"strings"
-
-	"desktop-cleaner/shared"
 )
 
-func resolveOrgAuth(orgs []*shared.Org) (string, string, error) {
-	var org *shared.Org
+func resolveOrgAuth(orgs []*internal.Org) (string, string, error) {
+	var org *internal.Org
 	var err error
 
 	if len(orgs) == 0 {
@@ -42,7 +41,7 @@ func resolveOrgAuth(orgs []*shared.Org) (string, string, error) {
 	return orgId, orgName, nil
 }
 
-func promptNoOrgs() (*shared.Org, error) {
+func promptNoOrgs() (*internal.Org, error) {
 	fmt.Println("🧐 You don't have access to any orgs yet.\n\nTo join an existing org, ask an admin to either invite you directly or give your whole email domain access.\n\nOtherwise, you can go ahead and create a new org.")
 
 	shouldCreate, err := term.ConfirmYesNo("Create a new org now?")
@@ -58,7 +57,7 @@ func promptNoOrgs() (*shared.Org, error) {
 	return nil, nil
 }
 
-func createOrg() (*shared.Org, error) {
+func createOrg() (*internal.Org, error) {
 	name, err := term.GetRequiredUserStringInput("Org name:")
 	if err != nil {
 		return nil, fmt.Errorf("error prompting org name: %v", err)
@@ -71,7 +70,7 @@ func createOrg() (*shared.Org, error) {
 	}
 
 	term.StartSpinner("")
-	res, apiErr := apiClient.CreateOrg(shared.CreateOrgRequest{
+	res, apiErr := apiClient.CreateOrg(internal.CreateOrgRequest{
 		Name:               name,
 		AutoAddDomainUsers: autoAddDomainUsers,
 	})
@@ -81,14 +80,14 @@ func createOrg() (*shared.Org, error) {
 		return nil, fmt.Errorf("error creating org: %v", apiErr.Msg)
 	}
 
-	return &shared.Org{Id: res.Id, Name: name}, nil
+	return &internal.Org{Id: res.Id, Name: name}, nil
 }
 
 func promptAutoAddUsersIfValid(email string) (bool, error) {
 	userDomain := strings.Split(email, "@")[1]
 	var autoAddDomainUsers bool
 	var err error
-	if !shared.IsEmailServiceDomain(userDomain) {
+	if !internal.IsEmailServiceDomain(userDomain) {
 		fmt.Println("With domain auto-join, you can allow any user with an email ending in @"+userDomain, "to auto-join this org.")
 		autoAddDomainUsers, err = term.ConfirmYesNo(fmt.Sprintf("Enable auto-join for %s?", userDomain))
 
@@ -101,7 +100,7 @@ func promptAutoAddUsersIfValid(email string) (bool, error) {
 
 const CreateOrgOption = "Create a new org"
 
-func selectOrg(orgs []*shared.Org) (*shared.Org, error) {
+func selectOrg(orgs []*internal.Org) (*internal.Org, error) {
 	var options []string
 	for _, org := range orgs {
 		options = append(options, org.Name)
@@ -118,7 +117,7 @@ func selectOrg(orgs []*shared.Org) (*shared.Org, error) {
 		return createOrg()
 	}
 
-	var selectedOrg *shared.Org
+	var selectedOrg *internal.Org
 	for _, org := range orgs {
 		if org.Name == selected {
 			selectedOrg = org

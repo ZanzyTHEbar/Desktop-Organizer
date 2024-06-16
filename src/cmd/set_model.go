@@ -3,6 +3,7 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"encoding/json"
@@ -10,8 +11,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"desktop-cleaner/shared"
 
 	"github.com/spf13/cobra"
 )
@@ -62,7 +61,7 @@ func modelsSet(cmd *cobra.Command, args []string) {
 	res, apiErr := api.Client.UpdateSettings(
 		lib.CurrentPlanId,
 		lib.CurrentBranch,
-		shared.UpdateSettingsRequest{
+		internal.UpdateSettingsRequest{
 			Settings: settings,
 		})
 	term.StopSpinner()
@@ -97,7 +96,7 @@ func defaultModelsSet(cmd *cobra.Command, args []string) {
 
 	term.StartSpinner("")
 	res, apiErr := api.Client.UpdateOrgDefaultSettings(
-		shared.UpdateSettingsRequest{
+		internal.UpdateSettingsRequest{
 			Settings: settings,
 		})
 	term.StopSpinner()
@@ -112,7 +111,7 @@ func defaultModelsSet(cmd *cobra.Command, args []string) {
 	term.PrintCmds("", "models", "set-model default", "log")
 }
 
-func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *shared.PlanSettings {
+func updateModelSettings(args []string, originalSettings *internal.PlanSettings) *internal.PlanSettings {
 	// Marshal and unmarshal to make a deep copy of the settings
 	jsonBytes, err := json.Marshal(originalSettings)
 	if err != nil {
@@ -120,7 +119,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 		return nil
 	}
 
-	var settings *shared.PlanSettings
+	var settings *internal.PlanSettings
 	err = json.Unmarshal(jsonBytes, &settings)
 	if err != nil {
 		term.OutputErrorAndExit("Error unmarshalling settings: %v", err)
@@ -128,18 +127,18 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 	}
 
 	var modelSetOrRoleOrSetting, propertyCompact, value string
-	var modelPack *shared.ModelPack
-	var role shared.ModelRole
+	var modelPack *internal.ModelPack
+	var role internal.ModelRole
 	var settingCompact string
 	var settingDasherized string
-	var selectedModel *shared.AvailableModel
+	var selectedModel *internal.AvailableModel
 	var temperature *float64
 	var topP *float64
 
 	if len(args) > 0 {
 		modelSetOrRoleOrSetting = args[0]
 
-		for _, ms := range shared.BuiltInModelPacks {
+		for _, ms := range internal.BuiltInModelPacks {
 			if strings.EqualFold(ms.Name, modelSetOrRoleOrSetting) {
 				modelPack = ms
 				break
@@ -147,16 +146,16 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 		}
 
 		if modelPack == nil {
-			for _, r := range shared.AllModelRoles {
+			for _, r := range internal.AllModelRoles {
 				if strings.EqualFold(string(r), modelSetOrRoleOrSetting) {
 					role = r
 					break
 				}
 			}
 			if role == "" {
-				for _, s := range shared.ModelOverridePropsDasherized {
-					compact := shared.Compact(s)
-					if strings.EqualFold(compact, shared.Compact(modelSetOrRoleOrSetting)) {
+				for _, s := range internal.ModelOverridePropsDasherized {
+					compact := internal.Compact(s)
+					if strings.EqualFold(compact, internal.Compact(modelSetOrRoleOrSetting)) {
 						settingCompact = compact
 						settingDasherized = s
 						break
@@ -170,12 +169,12 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 		// Prompt user to select between updating a model-set, a top-level setting or a model role
 		opts := []string{"🎛️  choose a model pack to change all roles at once"}
 
-		for _, role := range shared.AllModelRoles {
-			label := fmt.Sprintf("🤖 role | %s → %s", role, shared.ModelRoleDescriptions[role])
+		for _, role := range internal.AllModelRoles {
+			label := fmt.Sprintf("🤖 role | %s → %s", role, internal.ModelRoleDescriptions[role])
 			opts = append(opts, label)
 		}
-		for _, setting := range shared.ModelOverridePropsDasherized {
-			label := fmt.Sprintf("⚙️  override | %s → %s", shared.Dasherize(setting), shared.SettingDescriptions[setting])
+		for _, setting := range internal.ModelOverridePropsDasherized {
+			label := fmt.Sprintf("⚙️  override | %s → %s", internal.Dasherize(setting), internal.SettingDescriptions[setting])
 			opts = append(opts, label)
 		}
 
@@ -199,7 +198,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 
 		if idx == 0 {
 			var opts []string
-			for _, ms := range shared.BuiltInModelPacks {
+			for _, ms := range internal.BuiltInModelPacks {
 				opts = append(opts, "Built-in | "+ms.Name)
 			}
 
@@ -240,24 +239,24 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 				}
 			}
 
-			if idx < len(shared.BuiltInModelPacks) {
-				modelPack = shared.BuiltInModelPacks[idx]
+			if idx < len(internal.BuiltInModelPacks) {
+				modelPack = internal.BuiltInModelPacks[idx]
 			} else {
-				modelPack = customModelPacks[idx-len(shared.BuiltInModelPacks)]
+				modelPack = customModelPacks[idx-len(internal.BuiltInModelPacks)]
 			}
 
-		} else if idx < len(shared.AllModelRoles)+1 {
-			role = shared.AllModelRoles[idx-1]
+		} else if idx < len(internal.AllModelRoles)+1 {
+			role = internal.AllModelRoles[idx-1]
 		} else {
-			settingDasherized = shared.ModelOverridePropsDasherized[idx-(len(shared.AllModelRoles)+1)]
-			settingCompact = shared.Compact(settingDasherized)
+			settingDasherized = internal.ModelOverridePropsDasherized[idx-(len(internal.AllModelRoles)+1)]
+			settingCompact = internal.Compact(settingDasherized)
 		}
 	}
 
 	if modelPack == nil {
 		if len(args) > 1 {
 			if role != "" {
-				propertyCompact = strings.ToLower(shared.Compact(args[1]))
+				propertyCompact = strings.ToLower(internal.Compact(args[1]))
 			} else {
 				value = args[1]
 			}
@@ -328,21 +327,21 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 					term.OutputErrorAndExit("Error fetching models: %v", apiErr)
 				}
 
-				customModels = shared.FilterCompatibleModels(customModels, role)
-				builtInModels := shared.FilterCompatibleModels(shared.AvailableModels, role)
+				customModels = internal.FilterCompatibleModels(customModels, role)
+				builtInModels := internal.FilterCompatibleModels(internal.AvailableModels, role)
 
 				allModels := append(customModels, builtInModels...)
 
 				for _, m := range allModels {
 					var p string
-					if m.Provider == shared.ModelProviderCustom {
+					if m.Provider == internal.ModelProviderCustom {
 						p = *m.CustomProvider
 					} else {
 						p = string(m.Provider)
 					}
 					p = strings.ToLower(p)
 
-					if propertyCompact == fmt.Sprintf("%s/%s", p, shared.Compact(m.ModelName)) {
+					if propertyCompact == fmt.Sprintf("%s/%s", p, internal.Compact(m.ModelName)) {
 						selectedModel = m
 						break
 					}
@@ -439,14 +438,14 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 			}
 
 			if settings.ModelPack == nil {
-				settings.ModelPack = shared.DefaultModelPack
+				settings.ModelPack = internal.DefaultModelPack
 			}
 
 			switch role {
-			case shared.ModelRolePlanner:
+			case internal.ModelRolePlanner:
 				if selectedModel != nil {
 					settings.ModelPack.Planner.BaseModelConfig = selectedModel.BaseModelConfig
-					settings.ModelPack.Planner.PlannerModelConfig = shared.PlannerModelConfig{
+					settings.ModelPack.Planner.PlannerModelConfig = internal.PlannerModelConfig{
 						MaxConvoTokens:       selectedModel.DefaultMaxConvoTokens,
 						ReservedOutputTokens: selectedModel.DefaultReservedOutputTokens,
 					}
@@ -456,7 +455,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 					settings.ModelPack.Planner.TopP = float32(*topP)
 				}
 
-			case shared.ModelRolePlanSummary:
+			case internal.ModelRolePlanSummary:
 				if selectedModel != nil {
 					settings.ModelPack.PlanSummary.BaseModelConfig = selectedModel.BaseModelConfig
 				} else if temperature != nil {
@@ -465,7 +464,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 					settings.ModelPack.PlanSummary.TopP = float32(*topP)
 				}
 
-			case shared.ModelRoleBuilder:
+			case internal.ModelRoleBuilder:
 				if selectedModel != nil {
 					settings.ModelPack.Builder.BaseModelConfig = selectedModel.BaseModelConfig
 				} else if temperature != nil {
@@ -474,7 +473,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 					settings.ModelPack.Builder.TopP = float32(*topP)
 				}
 
-			case shared.ModelRoleName:
+			case internal.ModelRoleName:
 				if selectedModel != nil {
 					settings.ModelPack.Namer.BaseModelConfig = selectedModel.BaseModelConfig
 				} else if temperature != nil {
@@ -483,7 +482,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 					settings.ModelPack.Namer.TopP = float32(*topP)
 				}
 
-			case shared.ModelRoleCommitMsg:
+			case internal.ModelRoleCommitMsg:
 				if selectedModel != nil {
 					settings.ModelPack.CommitMsg.BaseModelConfig = selectedModel.BaseModelConfig
 				} else if temperature != nil {
@@ -492,7 +491,7 @@ func updateModelSettings(args []string, originalSettings *shared.PlanSettings) *
 					settings.ModelPack.CommitMsg.TopP = float32(*topP)
 				}
 
-			case shared.ModelRoleExecStatus:
+			case internal.ModelRoleExecStatus:
 				if selectedModel != nil {
 					settings.ModelPack.ExecStatus.BaseModelConfig = selectedModel.BaseModelConfig
 				} else if temperature != nil {

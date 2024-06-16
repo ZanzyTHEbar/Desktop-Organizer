@@ -3,11 +3,10 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"fmt"
 	"os"
-
-	"desktop-cleaner/shared"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -26,16 +25,16 @@ func init() {
 func listUsersAndInvites(cmd *cobra.Command, args []string) {
 	auth.MustResolveAuthWithOrg()
 
-	var userResp *shared.ListUsersResponse
-	var pendingInvites []*shared.Invite
-	var orgRoles []*shared.OrgRole
+	var userResp *internal.ListUsersResponse
+	var pendingInvites []*internal.Invite
+	var orgRoles []*internal.OrgRole
 
 	errCh := make(chan error)
 
 	term.StartSpinner("")
 
 	go func() {
-		var err *shared.ApiError
+		var err *internal.ApiError
 		userResp, err = api.Client.ListUsers()
 		if err != nil {
 			errCh <- fmt.Errorf("error fetching users: %s", err.Msg)
@@ -45,7 +44,7 @@ func listUsersAndInvites(cmd *cobra.Command, args []string) {
 	}()
 
 	go func() {
-		var err *shared.ApiError
+		var err *internal.ApiError
 		pendingInvites, err = api.Client.ListPendingInvites()
 		if err != nil {
 			errCh <- fmt.Errorf("error fetching pending invites: %s", err.Msg)
@@ -55,7 +54,7 @@ func listUsersAndInvites(cmd *cobra.Command, args []string) {
 	}()
 
 	go func() {
-		var err *shared.ApiError
+		var err *internal.ApiError
 		orgRoles, err = api.Client.ListOrgRoles()
 		if err != nil {
 			errCh <- fmt.Errorf("error fetching org roles: %s", err.Msg)
@@ -75,7 +74,7 @@ func listUsersAndInvites(cmd *cobra.Command, args []string) {
 
 	term.StopSpinner()
 
-	orgRolesById := make(map[string]*shared.OrgRole)
+	orgRolesById := make(map[string]*internal.OrgRole)
 	for _, role := range orgRoles {
 		orgRolesById[role.Id] = role
 	}

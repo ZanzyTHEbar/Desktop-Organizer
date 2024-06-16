@@ -1,11 +1,10 @@
 package stream
 
 import (
+	"desktop-cleaner/internal"
 	streamtui "desktop-cleaner/stream_tui"
 	"desktop-cleaner/types"
 	"log"
-
-	"desktop-cleaner/shared"
 )
 
 var OnStreamPlan types.OnStreamPlan = func(params types.OnStreamPlanParams) {
@@ -14,7 +13,7 @@ var OnStreamPlan types.OnStreamPlan = func(params types.OnStreamPlanParams) {
 		return
 	}
 
-	if params.Msg.Type == shared.StreamMessageStart {
+	if params.Msg.Type == internal.StreamMessageStart {
 		log.Println("Stream started")
 		return
 	}

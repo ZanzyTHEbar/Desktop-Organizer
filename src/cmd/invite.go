@@ -3,10 +3,9 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"fmt"
-
-	"desktop-cleaner/shared"
 
 	"github.com/spf13/cobra"
 )
@@ -85,7 +84,7 @@ func invite(cmd *cobra.Command, args []string) {
 		term.OutputErrorAndExit("Org role '%s' not found", orgRoleName)
 	}
 
-	inviteRequest := shared.InviteRequest{
+	inviteRequest := internal.InviteRequest{
 		Email:     email,
 		Name:      name,
 		OrgRoleId: orgRoleId,

@@ -11,8 +11,8 @@ import (
 )
 
 func WriteCurrentPlan(id string) error {
-	if fs.HomeDesktopCleanerDir == "" {
-		return fmt.Errorf("HomeDesktopCleanerDir not set")
+	if fs.HomeDCDir == "" {
+		return fmt.Errorf("DesktopCleaner Home directory not set")
 	}
 
 	if CurrentProjectId == "" || HomeCurrentPlanPath == "" {
@@ -39,8 +39,8 @@ func WriteCurrentPlan(id string) error {
 }
 
 func ClearCurrentPlan() error {
-	if fs.HomeDesktopCleanerDir == "" {
-		return fmt.Errorf("HomeDesktopCleanerDir not set")
+	if fs.HomeDCDir == "" {
+		return fmt.Errorf("DesktopCleaner Home directory not set")
 	}
 
 	if CurrentProjectId == "" || HomeCurrentPlanPath == "" {
@@ -58,8 +58,8 @@ func ClearCurrentPlan() error {
 }
 
 func WriteCurrentBranch(branch string) error {
-	if fs.HomeDesktopCleanerDir == "" {
-		return fmt.Errorf("HomeDesktopCleanerDir not set")
+	if fs.HomeDCDir == "" {
+		return fmt.Errorf("DesktopCleaner Home directory not set")
 	}
 
 	if CurrentProjectId == "" || HomeCurrentPlanPath == "" {
@@ -80,7 +80,7 @@ func WriteCurrentBranch(branch string) error {
 		return fmt.Errorf("error marshalling current plan settings: %v", err)
 	}
 
-	dir := filepath.Join(fs.HomeDesktopCleanerDir, CurrentProjectId, CurrentPlanId)
+	dir := filepath.Join(fs.HomeDCDir, CurrentProjectId, CurrentPlanId)
 
 	err = os.MkdirAll(dir, os.ModePerm)
 
@@ -102,8 +102,8 @@ func WriteCurrentBranch(branch string) error {
 }
 
 func GetCurrentBranchNamesByPlanId(planIds []string) (map[string]string, error) {
-	if fs.HomeDesktopCleanerDir == "" {
-		return nil, fmt.Errorf("HomeDesktopCleanerDir not set")
+	if fs.HomeDCDir == "" {
+		return nil, fmt.Errorf("DesktopCleaner Home directory not set")
 	}
 
 	if CurrentProjectId == "" || HomeCurrentPlanPath == "" {
@@ -138,15 +138,15 @@ func GetCurrentBranchNamesByPlanId(planIds []string) (map[string]string, error) 
 }
 
 func getPlanCurrentBranch(planId string) (string, error) {
-	if fs.HomeDesktopCleanerDir == "" {
-		return "", fmt.Errorf("HomeDesktopCleanerDir not set")
+	if fs.HomeDCDir == "" {
+		return "", fmt.Errorf("DesktopCleaner Home directory not set")
 	}
 
 	if CurrentProjectId == "" || HomeCurrentPlanPath == "" {
 		return "", fmt.Errorf("no current project")
 	}
 
-	path := filepath.Join(fs.HomeDesktopCleanerDir, CurrentProjectId, planId, "settings.json")
+	path := filepath.Join(fs.HomeDCDir, CurrentProjectId, planId, "settings.json")
 
 	// Check if settings.json exists
 	_, err := os.Stat(path)

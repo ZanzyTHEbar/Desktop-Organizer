@@ -3,10 +3,9 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"fmt"
-
-	"desktop-cleaner/shared"
 
 	"github.com/spf13/cobra"
 )
@@ -30,14 +29,14 @@ func revoke(cmd *cobra.Command, args []string) {
 		email = args[0]
 	}
 
-	var userResp *shared.ListUsersResponse
-	var pendingInvites []*shared.Invite
+	var userResp *internal.ListUsersResponse
+	var pendingInvites []*internal.Invite
 	errCh := make(chan error)
 
 	term.StartSpinner("")
 
 	go func() {
-		var err *shared.ApiError
+		var err *internal.ApiError
 		userResp, err = api.Client.ListUsers()
 		if err != nil {
 			errCh <- fmt.Errorf("error fetching users: %s", err.Msg)
@@ -47,7 +46,7 @@ func revoke(cmd *cobra.Command, args []string) {
 	}()
 
 	go func() {
-		var err *shared.ApiError
+		var err *internal.ApiError
 		pendingInvites, err = api.Client.ListPendingInvites()
 		if err != nil {
 			errCh <- fmt.Errorf("error fetching pending invites: %s", err.Msg)

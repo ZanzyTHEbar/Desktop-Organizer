@@ -6,10 +6,9 @@ import (
 
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
-
-	"desktop-cleaner/shared"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -37,11 +36,11 @@ func new(cmd *cobra.Command, args []string) {
 	lib.MustResolveOrCreateProject()
 
 	term.StartSpinner("")
-	res, apiErr := api.Client.CreatePlan(lib.CurrentProjectId, shared.CreatePlanRequest{Name: name})
+	res, apiErr := api.Client.CreatePlan(lib.CurrentProjectId, internal.CreatePlanRequest{Name: name})
 	term.StopSpinner()
 
 	if apiErr != nil {
-		if apiErr.Type == shared.ApiErrorTypeTrialPlansExceeded {
+		if apiErr.Type == internal.ApiErrorTypeTrialPlansExceeded {
 			fmt.Fprintf(os.Stderr, "🚨 You've reached the DesktopCleaner Cloud anonymous trial limit of %d plans\n", apiErr.TrialPlansExceededError.MaxPlans)
 
 			res, err := term.ConfirmYesNo("Upgrade to an unlimited free account?")

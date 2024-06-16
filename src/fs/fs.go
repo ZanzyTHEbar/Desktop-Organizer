@@ -28,6 +28,9 @@ var HomeDCDir string
 
 var ProjectRoot string
 
+var HomeAuthPath string
+var HomeAccountsPath string
+
 type DebugLevelType string
 
 const (
@@ -51,12 +54,12 @@ func init() {
 	var err error
 	Cwd, err = os.Getwd()
 	if err != nil {
-		// term.OutputErrorAndExit("Error getting current working directory: %v", err)
+		term.OutputErrorAndExit("Error getting current working directory: %v", err)
 	}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		// term.OutputErrorAndExit("Couldn't find home directory: %v", err)
+		term.OutputErrorAndExit("Couldn't find home directory: %v", err)
 	}
 
 	HomeDir = home
@@ -69,18 +72,21 @@ func init() {
 
 	err = os.MkdirAll(HomeDCDir, os.ModePerm)
 	if err != nil {
-		// term.OutputErrorAndExit("Error creating config directory: %v", err.Error())
+		term.OutputErrorAndExit("Error creating config directory: %v", err.Error())
 	}
+
+	HomeAuthPath = filepath.Join(HomeDCDir, "auth.json")
+	HomeAccountsPath = filepath.Join(HomeDCDir, "accounts.json")
 
 	CacheDir = filepath.Join(HomeDCDir, "cache")
 	err = os.MkdirAll(filepath.Join(CacheDir, "tiktoken"), os.ModePerm)
 	if err != nil {
-		// term.OutputErrorAndExit("Error creating cache directory: %v", err.Error())
+		term.OutputErrorAndExit("Error creating cache directory: %v", err.Error())
 	}
 
 	err = os.Setenv("TIKTOKEN_CACHE_DIR", CacheDir)
 	if err != nil {
-		// term.OutputErrorAndExit("Error setting cache directory: %v", err.Error())
+		term.OutputErrorAndExit("Error setting cache directory: %v", err.Error())
 	}
 
 	HomeDCDir = findDesktopCleaner(Cwd)
@@ -93,7 +99,7 @@ func init() {
 	// Load the configuration file
 	InstanceConfig, err = LoadConfig(ConfigFile)
 	if err != nil {
-		// term.OutputErrorAndExit("Error loading configuration: %v", err)
+		term.OutputErrorAndExit("Error loading configuration: %v", err)
 	}
 }
 
@@ -106,12 +112,12 @@ func LoadConfig(filePath string) (*Config, error) {
 		// Write the default configuration to the file
 		err = cfg.ReflectFrom(getDefaultConfig())
 		if err != nil {
-			// term.OutputErrorAndExit("Error creating config file: %v", err)
+			term.OutputErrorAndExit("Error creating config file: %v", err)
 		}
 
 		err = cfg.SaveTo(ConfigFile)
 		if err != nil {
-			// term.OutputErrorAndExit("Error saving config file: %v", err)
+			term.OutputErrorAndExit("Error saving config file: %v", err)
 		}
 	}
 

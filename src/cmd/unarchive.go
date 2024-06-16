@@ -3,13 +3,12 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"fmt"
 	"strconv"
 	"strings"
-
-	"desktop-cleaner/shared"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -36,7 +35,7 @@ func unarchive(cmd *cobra.Command, args []string) {
 		nameOrIdx = strings.TrimSpace(args[0])
 	}
 
-	var plan *shared.Plan
+	var plan *internal.Plan
 
 	term.StartSpinner("")
 	plans, apiErr := api.Client.ListArchivedPlans([]string{lib.CurrentProjectId})

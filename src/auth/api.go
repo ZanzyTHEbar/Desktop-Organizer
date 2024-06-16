@@ -1,13 +1,12 @@
 package auth
 
 import (
+	"desktop-cleaner/internal"
 	"desktop-cleaner/types"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"desktop-cleaner/shared"
 )
 
 var apiClient types.ApiClient
@@ -21,7 +20,7 @@ func SetAuthHeader(req *http.Request) error {
 		return fmt.Errorf("error setting auth header: auth not loaded")
 	}
 
-	authHeader := shared.AuthHeader{
+	authHeader := internal.AuthHeader{
 		Token: Current.Token,
 		OrgId: Current.OrgId,
 	}

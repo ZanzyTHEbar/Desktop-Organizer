@@ -3,13 +3,12 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"fmt"
 	"os"
 	"strconv"
-
-	"desktop-cleaner/shared"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -65,24 +64,24 @@ var deleteCustomModelCmd = &cobra.Command{
 func createCustomModel(cmd *cobra.Command, args []string) {
 	auth.MustResolveAuthWithOrg()
 
-	model := &shared.AvailableModel{
-		BaseModelConfig: shared.BaseModelConfig{
-			ModelCompatibility: shared.ModelCompatibility{
+	model := &internal.AvailableModel{
+		BaseModelConfig: internal.BaseModelConfig{
+			ModelCompatibility: internal.ModelCompatibility{
 				IsOpenAICompatible: true,
 			},
 		},
 	}
 
-	opts := shared.AllModelProviders
+	opts := internal.AllModelProviders
 	provider, err := term.SelectFromList("Select provider:", opts)
 
 	if err != nil {
 		term.OutputErrorAndExit("Error selecting provider: %v", err)
 		return
 	}
-	model.Provider = shared.ModelProvider(provider)
+	model.Provider = internal.ModelProvider(provider)
 
-	if model.Provider == shared.ModelProviderCustom {
+	if model.Provider == internal.ModelProviderCustom {
 		customProvider, err := term.GetRequiredUserStringInput("Custom provider:")
 		if err != nil {
 			term.OutputErrorAndExit("Error reading custom provider: %v", err)
@@ -107,7 +106,7 @@ func createCustomModel(cmd *cobra.Command, args []string) {
 	}
 	model.Description = description
 
-	if model.Provider == shared.ModelProviderCustom {
+	if model.Provider == internal.ModelProviderCustom {
 		baseUrl, err := term.GetRequiredUserStringInput("Base URL:")
 		if err != nil {
 			term.OutputErrorAndExit("Error reading base URL: %v", err)
@@ -115,10 +114,10 @@ func createCustomModel(cmd *cobra.Command, args []string) {
 		}
 		model.BaseUrl = baseUrl
 	} else {
-		model.BaseUrl = shared.BaseUrlByProvider[model.Provider]
+		model.BaseUrl = internal.BaseUrlByProvider[model.Provider]
 	}
 
-	apiKeyDefault := shared.ApiKeyByProvider[model.Provider]
+	apiKeyDefault := internal.ApiKeyByProvider[model.Provider]
 	var apiKeyEnvVar string
 	if apiKeyDefault == "" {
 		apiKeyEnvVar, err = term.GetRequiredUserStringInput("API key environment variable:")
@@ -290,7 +289,7 @@ func listAvailableModels(cmd *cobra.Command, args []string) {
 
 	if !customModelsOnly {
 		color.New(color.Bold, term.ColorHiCyan).Println("🏠 Built-in Models")
-		builtIn := shared.AvailableModels
+		builtIn := internal.AvailableModels
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetAutoWrapText(false)
 		table.SetHeader([]string{"Provider", "Name", "🪙", "🔑"})
@@ -309,7 +308,7 @@ func listAvailableModels(cmd *cobra.Command, args []string) {
 		for i, model := range customModels {
 			var provider string
 			p := model.Provider
-			if p == shared.ModelProviderCustom {
+			if p == internal.ModelProviderCustom {
 				provider = *model.CustomProvider
 			} else {
 				provider = string(p)
@@ -353,7 +352,7 @@ func deleteCustomModel(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var modelToDelete *shared.AvailableModel
+	var modelToDelete *internal.AvailableModel
 
 	if len(args) == 1 {
 		input := args[0]
@@ -377,7 +376,7 @@ func deleteCustomModel(cmd *cobra.Command, args []string) {
 		for i, model := range models {
 			var provider string
 			p := model.Provider
-			if p == shared.ModelProviderCustom {
+			if p == internal.ModelProviderCustom {
 				provider = *model.CustomProvider
 			} else {
 				provider = string(p)
@@ -418,7 +417,7 @@ func deleteCustomModel(cmd *cobra.Command, args []string) {
 	term.PrintCmds("", "models available", "models add")
 }
 
-func renderSettings(settings *shared.PlanSettings) {
+func renderSettings(settings *internal.PlanSettings) {
 	modelPack := settings.ModelPack
 
 	color.New(color.Bold, term.ColorHiCyan).Println("🎛️  Current Model Set")
@@ -436,7 +435,7 @@ func renderSettings(settings *shared.PlanSettings) {
 	table.SetAutoWrapText(false)
 	table.SetHeader([]string{"Role", "Provider", "Model", "Temperature", "Top P"})
 
-	addModelRow := func(role string, config shared.ModelRoleConfig) {
+	addModelRow := func(role string, config internal.ModelRoleConfig) {
 		table.Append([]string{
 			role,
 			string(config.BaseModelConfig.Provider),
@@ -446,14 +445,14 @@ func renderSettings(settings *shared.PlanSettings) {
 		})
 	}
 
-	addModelRow(string(shared.ModelRolePlanner), modelPack.Planner.ModelRoleConfig)
-	addModelRow(string(shared.ModelRolePlanSummary), modelPack.PlanSummary)
-	addModelRow(string(shared.ModelRoleBuilder), modelPack.Builder)
-	addModelRow(string(shared.ModelRoleName), modelPack.Namer)
-	addModelRow(string(shared.ModelRoleCommitMsg), modelPack.CommitMsg)
-	addModelRow(string(shared.ModelRoleExecStatus), modelPack.ExecStatus)
-	addModelRow(string(shared.ModelRoleVerifier), modelPack.GetVerifier())
-	addModelRow(string(shared.ModelRoleAutoFix), modelPack.GetAutoFix())
+	addModelRow(string(internal.ModelRolePlanner), modelPack.Planner.ModelRoleConfig)
+	addModelRow(string(internal.ModelRolePlanSummary), modelPack.PlanSummary)
+	addModelRow(string(internal.ModelRoleBuilder), modelPack.Builder)
+	addModelRow(string(internal.ModelRoleName), modelPack.Namer)
+	addModelRow(string(internal.ModelRoleCommitMsg), modelPack.CommitMsg)
+	addModelRow(string(internal.ModelRoleExecStatus), modelPack.ExecStatus)
+	addModelRow(string(internal.ModelRoleVerifier), modelPack.GetVerifier())
+	addModelRow(string(internal.ModelRoleAutoFix), modelPack.GetAutoFix())
 	table.Render()
 
 	fmt.Println()

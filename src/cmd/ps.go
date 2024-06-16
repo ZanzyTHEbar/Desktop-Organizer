@@ -4,12 +4,11 @@ import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
 	"desktop-cleaner/format"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"fmt"
 	"os"
-
-	"desktop-cleaner/shared"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -58,13 +57,13 @@ func ps(cmd *cobra.Command, args []string) {
 		status := "Active"
 		finishedAt := res.StreamFinishedAtByBranchId[b.Id]
 		switch b.Status {
-		case shared.PlanStatusFinished:
+		case internal.PlanStatusFinished:
 			status = "Finished " + format.Time(finishedAt)
-		case shared.PlanStatusError:
+		case internal.PlanStatusError:
 			status = "Error " + format.Time(finishedAt)
-		case shared.PlanStatusStopped:
+		case internal.PlanStatusStopped:
 			status = "Stopped " + format.Time(finishedAt)
-		case shared.PlanStatusMissingFile:
+		case internal.PlanStatusMissingFile:
 			status = "Missing file"
 		}
 

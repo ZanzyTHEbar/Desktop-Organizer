@@ -38,15 +38,15 @@ func resolveProject(mustResolve, shouldCreate bool) {
 	if fs.HomeDCDir == "" && mustResolve && shouldCreate {
 		_, _, err := fs.FindOrCreateDesktopCleaner()
 		if err != nil {
-			term.OutputErrorAndExit("error finding or creating plandex: %v", err)
+			term.OutputErrorAndExit("error finding or creating desktop-cleaner: %v", err)
 		}
 	}
 
 	if (fs.HomeDCDir == "" || fs.ProjectRoot == "") && mustResolve {
 		fmt.Printf(
 			"🤷‍♂️ No plans in current directory\nTry %s to create a plan or %s to see plans in nearby directories\n",
-			color.New(color.Bold, term.ColorHiCyan).Sprint("plandex new"),
-			color.New(color.Bold, term.ColorHiCyan).Sprint("plandex plans"))
+			color.New(color.Bold, term.ColorHiCyan).Sprint("desktop-cleaner new"),
+			color.New(color.Bold, term.ColorHiCyan).Sprint("desktop-cleaner plans"))
 		os.Exit(0)
 	}
 
@@ -82,7 +82,7 @@ func resolveProject(mustResolve, shouldCreate bool) {
 
 	CurrentProjectId = settings.Id
 
-	HomeCurrentProjectDir = filepath.Join(fs.Hom.HomeDCDir, CurrentProjectId)
+	HomeCurrentProjectDir = filepath.Join(fs.HomeDCDir, CurrentProjectId)
 	HomeCurrentPlanPath = filepath.Join(HomeCurrentProjectDir, "current_plan.json")
 
 	err = os.MkdirAll(HomeCurrentProjectDir, os.ModePerm)
@@ -185,7 +185,7 @@ func mustInitProject() {
 	CurrentProjectId = res.Id
 
 	// write project.json
-	path := filepath.Join(fs., "project.json")
+	path := filepath.Join(fs.HomeDCDir, "project.json")
 	bytes, err := json.Marshal(types.CurrentProjectSettings{
 		Id: CurrentProjectId,
 	})
@@ -203,7 +203,7 @@ func mustInitProject() {
 	log.Println("Wrote project.json")
 
 	// write current_plan.json to DesktopCleanerHomeDir/[projectId]/current_plan.json
-	dir := filepath.Join(fs.Hom., CurrentProjectId)
+	dir := filepath.Join(fs.HomeDCDir, CurrentProjectId)
 	err = os.MkdirAll(dir, os.ModePerm)
 
 	if err != nil {

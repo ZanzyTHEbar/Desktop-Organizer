@@ -6,22 +6,22 @@ import (
 	"fmt"
 	"os"
 
-	"desktop-cleaner/shared"
+	"desktop-cleaner/internal"
 
 	"github.com/fatih/color"
 )
 
 const GoBack = "← Go back"
 
-func SelectModelForRole(customModels []*shared.AvailableModel, role shared.ModelRole, includeProviderGoBack bool) *shared.AvailableModel {
+func SelectModelForRole(customModels []*internal.AvailableModel, role internal.ModelRole, includeProviderGoBack bool) *internal.AvailableModel {
 	var providers []string
 	addedProviders := map[string]bool{}
 
-	builtInModels := shared.FilterCompatibleModels(shared.AvailableModels, role)
+	builtInModels := internal.FilterCompatibleModels(internal.AvailableModels, role)
 
 	for _, m := range builtInModels {
 		var p string
-		if m.Provider == shared.ModelProviderCustom {
+		if m.Provider == internal.ModelProviderCustom {
 			p = *m.CustomProvider
 		} else {
 			p = string(m.Provider)
@@ -33,11 +33,11 @@ func SelectModelForRole(customModels []*shared.AvailableModel, role shared.Model
 		}
 	}
 
-	customModels = shared.FilterCompatibleModels(customModels, role)
+	customModels = internal.FilterCompatibleModels(customModels, role)
 
 	for _, m := range customModels {
 		var p string
-		if m.Provider == shared.ModelProviderCustom {
+		if m.Provider == internal.ModelProviderCustom {
 			p = *m.CustomProvider
 		} else {
 			p = string(m.Provider)
@@ -69,12 +69,12 @@ func SelectModelForRole(customModels []*shared.AvailableModel, role shared.Model
 			break
 		}
 
-		var selectableModels []*shared.AvailableModel
+		var selectableModels []*internal.AvailableModel
 		opts = []string{}
 
 		for _, m := range builtInModels {
 			var p string
-			if m.Provider == shared.ModelProviderCustom {
+			if m.Provider == internal.ModelProviderCustom {
 				p = *m.CustomProvider
 			} else {
 				p = string(m.Provider)
@@ -89,7 +89,7 @@ func SelectModelForRole(customModels []*shared.AvailableModel, role shared.Model
 
 		for _, m := range customModels {
 			var p string
-			if m.Provider == shared.ModelProviderCustom {
+			if m.Provider == internal.ModelProviderCustom {
 				p = *m.CustomProvider
 			} else {
 				p = string(m.Provider)

@@ -1,27 +1,27 @@
 package lib
 
-import "desktop-cleaner/shared"
+import "desktop-cleaner/internal"
 
-func GetContextLabelAndIcon(contextType shared.ContextType) (string, string) {
+func GetContextLabelAndIcon(contextType internal.ContextType) (string, string) {
 	var icon string
 	var lbl string
 	switch contextType {
-	case shared.ContextFileType:
+	case internal.ContextFileType:
 		icon = "📄"
 		lbl = "file"
-	case shared.ContextURLType:
+	case internal.ContextURLType:
 		icon = "🌎"
 		lbl = "url"
-	case shared.ContextDirectoryTreeType:
+	case internal.ContextDirectoryTreeType:
 		icon = "🗂 "
 		lbl = "tree"
-	case shared.ContextNoteType:
+	case internal.ContextNoteType:
 		icon = "✏️ "
 		lbl = "note"
-	case shared.ContextPipedDataType:
+	case internal.ContextPipedDataType:
 		icon = "↔️ "
 		lbl = "piped"
-	case shared.ContextImageType:
+	case internal.ContextImageType:
 		icon = "🖼️ "
 		lbl = "image"
 	}

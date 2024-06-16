@@ -3,13 +3,12 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"fmt"
 	"os"
 	"strconv"
-
-	"desktop-cleaner/shared"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -63,7 +62,7 @@ func deleteModelPack(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var setToDelete *shared.ModelPack
+	var setToDelete *internal.ModelPack
 
 	if len(args) == 1 {
 		input := args[0]
@@ -125,7 +124,7 @@ func listModelPacks(cmd *cobra.Command, args []string) {
 	auth.MustResolveAuthWithOrg()
 
 	term.StartSpinner("")
-	builtInModelPacks := shared.BuiltInModelPacks
+	builtInModelPacks := internal.BuiltInModelPacks
 	customModelPacks, err := api.Client.ListModelPacks()
 	term.StopSpinner()
 
@@ -177,7 +176,7 @@ func listModelPacks(cmd *cobra.Command, args []string) {
 func createModelPack(cmd *cobra.Command, args []string) {
 	auth.MustResolveAuthWithOrg()
 
-	mp := &shared.ModelPack{}
+	mp := &internal.ModelPack{}
 
 	name, err := term.GetRequiredUserStringInput("Enter model pack name:")
 	if err != nil {
@@ -203,14 +202,14 @@ func createModelPack(cmd *cobra.Command, args []string) {
 
 	// Selecting models for each role
 	mp.Planner = getPlannerRoleConfig(customModels)
-	mp.PlanSummary = getModelRoleConfig(customModels, shared.ModelRolePlanSummary)
-	mp.Builder = getModelRoleConfig(customModels, shared.ModelRoleBuilder)
-	mp.Namer = getModelRoleConfig(customModels, shared.ModelRoleName)
-	mp.CommitMsg = getModelRoleConfig(customModels, shared.ModelRoleCommitMsg)
-	mp.ExecStatus = getModelRoleConfig(customModels, shared.ModelRoleExecStatus)
-	verifier := getModelRoleConfig(customModels, shared.ModelRoleVerifier)
+	mp.PlanSummary = getModelRoleConfig(customModels, internal.ModelRolePlanSummary)
+	mp.Builder = getModelRoleConfig(customModels, internal.ModelRoleBuilder)
+	mp.Namer = getModelRoleConfig(customModels, internal.ModelRoleName)
+	mp.CommitMsg = getModelRoleConfig(customModels, internal.ModelRoleCommitMsg)
+	mp.ExecStatus = getModelRoleConfig(customModels, internal.ModelRoleExecStatus)
+	verifier := getModelRoleConfig(customModels, internal.ModelRoleVerifier)
 	mp.Verifier = &verifier
-	autoFix := getModelRoleConfig(customModels, shared.ModelRoleAutoFix)
+	autoFix := getModelRoleConfig(customModels, internal.ModelRoleAutoFix)
 	mp.AutoFix = &autoFix
 
 	term.StartSpinner("")
@@ -229,17 +228,17 @@ func createModelPack(cmd *cobra.Command, args []string) {
 	term.PrintCmds("", "model-packs", "model-packs --custom", "model-packs delete")
 }
 
-func getModelRoleConfig(customModels []*shared.AvailableModel, modelRole shared.ModelRole) shared.ModelRoleConfig {
+func getModelRoleConfig(customModels []*internal.AvailableModel, modelRole internal.ModelRole) internal.ModelRoleConfig {
 	_, modelConfig := getModelWithRoleConfig(customModels, modelRole)
 	return modelConfig
 }
 
-func getModelWithRoleConfig(customModels []*shared.AvailableModel, modelRole shared.ModelRole) (*shared.AvailableModel, shared.ModelRoleConfig) {
+func getModelWithRoleConfig(customModels []*internal.AvailableModel, modelRole internal.ModelRole) (*internal.AvailableModel, internal.ModelRoleConfig) {
 	role := string(modelRole)
 
 	model := getModelForRole(customModels, modelRole)
 
-	temperatureStr, err := term.GetUserStringInputWithDefault("Temperature for "+role+":", fmt.Sprintf("%.1f", shared.DefaultConfigByRole[modelRole].Temperature))
+	temperatureStr, err := term.GetUserStringInputWithDefault("Temperature for "+role+":", fmt.Sprintf("%.1f", internal.DefaultConfigByRole[modelRole].Temperature))
 	if err != nil {
 		term.OutputErrorAndExit("Error reading temperature: %v", err)
 	}
@@ -248,7 +247,7 @@ func getModelWithRoleConfig(customModels []*shared.AvailableModel, modelRole sha
 		term.OutputErrorAndExit("Invalid number for temperature: %v", err)
 	}
 
-	topPStr, err := term.GetUserStringInputWithDefault("Top P for "+role+":", fmt.Sprintf("%.1f", shared.DefaultConfigByRole[modelRole].TopP))
+	topPStr, err := term.GetUserStringInputWithDefault("Top P for "+role+":", fmt.Sprintf("%.1f", internal.DefaultConfigByRole[modelRole].TopP))
 	if err != nil {
 		term.OutputErrorAndExit("Error reading top P: %v", err)
 	}
@@ -257,7 +256,7 @@ func getModelWithRoleConfig(customModels []*shared.AvailableModel, modelRole sha
 		term.OutputErrorAndExit("Invalid number for top P: %v", err)
 	}
 
-	return model, shared.ModelRoleConfig{
+	return model, internal.ModelRoleConfig{
 		Role:            modelRole,
 		BaseModelConfig: model.BaseModelConfig,
 		Temperature:     float32(temperature),
@@ -265,19 +264,19 @@ func getModelWithRoleConfig(customModels []*shared.AvailableModel, modelRole sha
 	}
 }
 
-func getPlannerRoleConfig(customModels []*shared.AvailableModel) shared.PlannerRoleConfig {
-	model, modelConfig := getModelWithRoleConfig(customModels, shared.ModelRolePlanner)
+func getPlannerRoleConfig(customModels []*internal.AvailableModel) internal.PlannerRoleConfig {
+	model, modelConfig := getModelWithRoleConfig(customModels, internal.ModelRolePlanner)
 
-	return shared.PlannerRoleConfig{
+	return internal.PlannerRoleConfig{
 		ModelRoleConfig: modelConfig,
-		PlannerModelConfig: shared.PlannerModelConfig{
+		PlannerModelConfig: internal.PlannerModelConfig{
 			MaxConvoTokens:       model.DefaultMaxConvoTokens,
 			ReservedOutputTokens: model.DefaultReservedOutputTokens,
 		},
 	}
 }
 
-func getModelForRole(customModels []*shared.AvailableModel, role shared.ModelRole) *shared.AvailableModel {
+func getModelForRole(customModels []*internal.AvailableModel, role internal.ModelRole) *internal.AvailableModel {
 	color.New(color.Bold).Printf("Select a model for the %s role 👇\n", role)
 	return lib.SelectModelForRole(customModels, role, false)
 }

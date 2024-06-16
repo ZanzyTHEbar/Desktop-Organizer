@@ -1,11 +1,10 @@
 package auth
 
 import (
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"desktop-cleaner/types"
 	"fmt"
-
-	"desktop-cleaner/shared"
 )
 
 func ConvertTrial() error {
@@ -44,7 +43,7 @@ func ConvertTrial() error {
 	}
 
 	term.StartSpinner("")
-	res, apiErr := apiClient.ConvertTrial(shared.ConvertTrialRequest{
+	res, apiErr := apiClient.ConvertTrial(internal.ConvertTrialRequest{
 		Email:                 email,
 		Pin:                   pin,
 		UserName:              name,

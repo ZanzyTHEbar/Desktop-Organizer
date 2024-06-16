@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"desktop-cleaner/shared"
+	"desktop-cleaner/internal"
 )
 
 func Build(params ExecParams, buildBg bool) (bool, error) {
@@ -30,7 +30,7 @@ func Build(params ExecParams, buildBg bool) (bool, error) {
 		return false, nil
 	}
 
-	paths, err := fs.GetProjectPaths(fs.GetBaseDirForContexts(contexts))
+	paths, err := fs.GetCleanerPaths(fs.GetBaseDirForContexts(contexts))
 
 	if err != nil {
 		return false, fmt.Errorf("error getting project paths: %v", err)
@@ -51,7 +51,7 @@ func Build(params ExecParams, buildBg bool) (bool, error) {
 	// log.Println("API keys:", params.ApiKeys)
 	// log.Println("Legacy API key:", legacyApiKey)
 
-	apiErr = api.Client.BuildPlan(params.CurrentPlanId, params.CurrentBranch, shared.BuildPlanRequest{
+	apiErr = api.Client.BuildPlan(params.CurrentPlanId, params.CurrentBranch, internal.BuildPlanRequest{
 		ConnectStream: !buildBg,
 		ProjectPaths:  paths.ActivePaths,
 		ApiKey:        legacyApiKey, // deprecated
@@ -64,7 +64,7 @@ func Build(params ExecParams, buildBg bool) (bool, error) {
 	term.StopSpinner()
 
 	if apiErr != nil {
-		if apiErr.Msg == shared.NoBuildsErr {
+		if apiErr.Msg == internal.NoBuildsErr {
 			fmt.Println("🤷‍♂️ This plan has no pending changes to build")
 			return false, nil
 		}

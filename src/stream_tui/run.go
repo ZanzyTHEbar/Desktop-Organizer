@@ -1,13 +1,12 @@
 package streamtui
 
 import (
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"fmt"
 	"log"
 	"os"
 	"sync"
-
-	"desktop-cleaner/shared"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fatih/color"
@@ -18,7 +17,7 @@ var mu sync.Mutex
 var wg sync.WaitGroup
 
 var prestartReply string
-var prestartErr *shared.ApiError
+var prestartErr *internal.ApiError
 var prestartAbort bool
 
 func StartStreamUI(prompt string, buildOnly bool) error {
@@ -104,15 +103,15 @@ func Quit() {
 
 }
 
-func Send(msg shared.StreamMessage) {
+func Send(msg internal.StreamMessage) {
 	if ui == nil {
 		log.Println("stream ui is nil")
 
-		if msg.Type == shared.StreamMessageError {
+		if msg.Type == internal.StreamMessageError {
 			prestartErr = msg.Error
-		} else if msg.Type == shared.StreamMessageAborted {
+		} else if msg.Type == internal.StreamMessageAborted {
 
-		} else if msg.Type == shared.StreamMessageReply {
+		} else if msg.Type == internal.StreamMessageReply {
 			prestartReply += msg.ReplyChunk
 		}
 		return

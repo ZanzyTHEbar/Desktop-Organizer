@@ -3,12 +3,11 @@ package api
 import (
 	"bufio"
 	"bytes"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/types"
 	"encoding/json"
 	"io"
 	"log"
-
-	"desktop-cleaner/shared"
 )
 
 func connectPlanRespStream(body io.ReadCloser, onStream types.OnStreamPlan) {
@@ -16,7 +15,7 @@ func connectPlanRespStream(body io.ReadCloser, onStream types.OnStreamPlan) {
 
 	go func() {
 		for {
-			s, err := readUntilSeparator(reader, shared.STREAM_MESSAGE_SEPARATOR)
+			s, err := readUntilSeparator(reader, internal.STREAM_MESSAGE_SEPARATOR)
 			if err != nil {
 				log.Println("Error reading line:", err)
 				onStream(types.OnStreamPlanParams{Msg: nil, Err: err})
@@ -24,7 +23,7 @@ func connectPlanRespStream(body io.ReadCloser, onStream types.OnStreamPlan) {
 				return
 			}
 
-			var msg shared.StreamMessage
+			var msg internal.StreamMessage
 			err = json.Unmarshal([]byte(s), &msg)
 			if err != nil {
 				log.Println("Error unmarshalling message:", err)
@@ -37,7 +36,7 @@ func connectPlanRespStream(body io.ReadCloser, onStream types.OnStreamPlan) {
 
 			onStream(types.OnStreamPlanParams{Msg: &msg, Err: nil})
 
-			if msg.Type == shared.StreamMessageFinished || msg.Type == shared.StreamMessageError || msg.Type == shared.StreamMessageAborted {
+			if msg.Type == internal.StreamMessageFinished || msg.Type == internal.StreamMessageError || msg.Type == internal.StreamMessageAborted {
 				body.Close()
 				return
 			}

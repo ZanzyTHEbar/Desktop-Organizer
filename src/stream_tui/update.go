@@ -2,6 +2,7 @@ package streamtui
 
 import (
 	"desktop-cleaner/api"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"fmt"
@@ -9,8 +10,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"desktop-cleaner/shared"
 
 	bubbleKey "github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -42,7 +41,7 @@ func (m streamUIModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowResized(msg.Width, msg.Height)
 
-	case shared.StreamMessage:
+	case internal.StreamMessage:
 		return m.streamUpdate(&msg)
 
 	case delayFileRestartMsg:
@@ -232,7 +231,7 @@ func (m *streamUIModel) scrollEnd() {
 	}
 }
 
-func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.Cmd) {
+func (m *streamUIModel) streamUpdate(msg *internal.StreamMessage) (tea.Model, tea.Cmd) {
 
 	checkMissingFileFn := func() {
 		if msg.MissingFilePath != "" {
@@ -247,7 +246,7 @@ func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.
 			}
 			m.missingFileContent = string(bytes)
 
-			numTokens, err := shared.GetNumTokens(m.missingFileContent)
+			numTokens, err := internal.GetNumTokens(m.missingFileContent)
 
 			if err != nil {
 				log.Println("failed to get num tokens:", err)
@@ -262,7 +261,7 @@ func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.
 	// log.Println("streamUI received message:", msg.Type)
 	switch msg.Type {
 
-	case shared.StreamMessageConnectActive:
+	case internal.StreamMessageConnectActive:
 
 		if msg.InitPrompt != "" {
 			m.prompt = msg.InitPrompt
@@ -277,10 +276,10 @@ func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.
 
 		checkMissingFileFn()
 
-	case shared.StreamMessagePromptMissingFile:
+	case internal.StreamMessagePromptMissingFile:
 		checkMissingFileFn()
 
-	case shared.StreamMessageReply:
+	case internal.StreamMessageReply:
 		if m.starting {
 			m.starting = false
 		}
@@ -299,7 +298,7 @@ func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.
 		m.reply += msg.ReplyChunk
 		m.updateReplyDisplay()
 
-	case shared.StreamMessageBuildInfo:
+	case internal.StreamMessageBuildInfo:
 		if m.starting {
 			m.starting = false
 		}
@@ -330,7 +329,7 @@ func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.
 		}
 		return m, tea.Batch(cmds...)
 
-	case shared.StreamMessageDescribing:
+	case internal.StreamMessageDescribing:
 		m.processing = true
 
 		cmds := []tea.Cmd{m.spinner.Tick}
@@ -341,20 +340,20 @@ func (m *streamUIModel) streamUpdate(msg *shared.StreamMessage) (tea.Model, tea.
 
 		return m, tea.Batch(cmds...)
 
-	case shared.StreamMessageError:
+	case internal.StreamMessageError:
 		m.apiErr = msg.Error
 		return m, tea.Quit
 
-	case shared.StreamMessageFinished:
+	case internal.StreamMessageFinished:
 		// log.Println("stream finished")
 		m.finished = true
 		return m, tea.Quit
 
-	case shared.StreamMessageAborted:
+	case internal.StreamMessageAborted:
 		m.stopped = true
 		return m, tea.Quit
 
-	case shared.StreamMessageRepliesFinished:
+	case internal.StreamMessageRepliesFinished:
 		m.processing = false
 
 		if m.building {
@@ -432,7 +431,7 @@ func (m *streamUIModel) selectedMissingFileOpt() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	apiErr := api.Client.RespondMissingFile(lib.CurrentPlanId, lib.CurrentBranch, shared.RespondMissingFileRequest{
+	apiErr := api.Client.RespondMissingFile(lib.CurrentPlanId, lib.CurrentBranch, internal.RespondMissingFileRequest{
 		Choice:   choice,
 		FilePath: m.missingFilePath,
 		Body:     m.missingFileContent,
@@ -444,7 +443,7 @@ func (m *streamUIModel) selectedMissingFileOpt() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	if choice == shared.RespondMissingFileChoiceSkip {
+	if choice == internal.RespondMissingFileChoiceSkip {
 		replyLines := strings.Split(m.reply, "\n")
 		m.reply = strings.Join(replyLines[:len(replyLines)-3], "\n")
 		m.updateReplyDisplay()

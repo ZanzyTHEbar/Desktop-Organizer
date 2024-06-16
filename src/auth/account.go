@@ -1,11 +1,10 @@
 package auth
 
 import (
+	"desktop-cleaner/internal"
 	"desktop-cleaner/term"
 	"desktop-cleaner/types"
 	"fmt"
-
-	"desktop-cleaner/shared"
 
 	"github.com/fatih/color"
 )
@@ -218,7 +217,7 @@ func verifyEmail(email, host string) (bool, string, error) {
 
 func signIn(email, pin, host string) error {
 	term.StartSpinner("")
-	res, apiErr := apiClient.SignIn(shared.SignInRequest{
+	res, apiErr := apiClient.SignIn(internal.SignInRequest{
 		Email: email,
 		Pin:   pin,
 	}, host)
@@ -274,7 +273,7 @@ func createAccount(email, pin, host string) error {
 	}
 
 	term.StartSpinner("🌟 Creating account...")
-	res, apiErr := apiClient.CreateAccount(shared.CreateAccountRequest{
+	res, apiErr := apiClient.CreateAccount(internal.CreateAccountRequest{
 		Email:    email,
 		UserName: name,
 		Pin:      pin,

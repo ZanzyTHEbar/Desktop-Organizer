@@ -3,12 +3,11 @@ package cmd
 import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/lib"
 	"desktop-cleaner/term"
 	"fmt"
 	"strconv"
-
-	"desktop-cleaner/shared"
 
 	"github.com/spf13/cobra"
 )
@@ -81,7 +80,7 @@ func rewind(cmd *cobra.Command, args []string) {
 	// log.Println("Rewinding to", targetSha)
 
 	// Rewind to the target sha
-	_, apiErr = api.Client.RewindPlan(lib.CurrentPlanId, lib.CurrentBranch, shared.RewindPlanRequest{Sha: targetSha})
+	_, apiErr = api.Client.RewindPlan(lib.CurrentPlanId, lib.CurrentBranch, internal.RewindPlanRequest{Sha: targetSha})
 	term.StopSpinner()
 
 	if apiErr != nil {

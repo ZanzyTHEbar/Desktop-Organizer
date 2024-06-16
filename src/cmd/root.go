@@ -22,7 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"desktop-cleaner/cmd/fs"
+	"desktop-cleaner/cmd/plan"
 	"desktop-cleaner/term"
 	"fmt"
 	"log"
@@ -56,7 +56,7 @@ func run(cmd *cobra.Command, args []string) {
 }
 
 func addSubCommandPalettes() {
-	RootCmd.AddCommand(fs.FSCmd)
+	RootCmd.AddCommand(plan.PlanCmd)
 }
 
 func init() {

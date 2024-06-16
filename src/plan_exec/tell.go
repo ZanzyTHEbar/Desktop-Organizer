@@ -4,14 +4,13 @@ import (
 	"desktop-cleaner/api"
 	"desktop-cleaner/auth"
 	"desktop-cleaner/fs"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/stream"
 	streamtui "desktop-cleaner/stream_tui"
 	"desktop-cleaner/term"
 	"fmt"
 	"log"
 	"os"
-
-	"desktop-cleaner/shared"
 )
 
 func TellPlan(
@@ -41,7 +40,7 @@ func TellPlan(
 		os.Exit(0)
 	}
 
-	paths, err := fs.GetProjectPaths(fs.GetBaseDirForContexts(contexts))
+	paths, err := fs.GetCleanerPaths(fs.GetBaseDirForContexts(contexts))
 
 	if err != nil {
 		term.OutputErrorAndExit("Error getting project paths: %v", err)
@@ -50,11 +49,11 @@ func TellPlan(
 	var fn func() bool
 	fn = func() bool {
 
-		var buildMode shared.BuildMode
+		var buildMode internal.BuildMode
 		if tellNoBuild {
-			buildMode = shared.BuildModeNone
+			buildMode = internal.BuildModeNone
 		} else {
-			buildMode = shared.BuildModeAuto
+			buildMode = internal.BuildModeAuto
 		}
 
 		if isUserContinue {
@@ -75,7 +74,7 @@ func TellPlan(
 			openAIOrgId = params.ApiKeys["OPENAI_ORG_ID"]
 		}
 
-		apiErr := api.Client.TellPlan(params.CurrentPlanId, params.CurrentBranch, shared.TellPlanRequest{
+		apiErr := api.Client.TellPlan(params.CurrentPlanId, params.CurrentBranch, internal.TellPlanRequest{
 			Prompt:         prompt,
 			ConnectStream:  !tellBg,
 			AutoContinue:   !tellStop,
@@ -92,7 +91,7 @@ func TellPlan(
 		term.StopSpinner()
 
 		if apiErr != nil {
-			if apiErr.Type == shared.ApiErrorTypeTrialMessagesExceeded {
+			if apiErr.Type == internal.ApiErrorTypeTrialMessagesExceeded {
 				fmt.Fprintf(os.Stderr, "\n🚨 You've reached the DesktopCleaner Cloud anonymous trial limit of %d messages per plan\n", apiErr.TrialMessagesExceededError.MaxReplies)
 
 				res, err := term.ConfirmYesNo("Upgrade to an unlimited free account?")
@@ -113,7 +112,7 @@ func TellPlan(
 			}
 
 			term.OutputErrorAndExit("Prompt error: %v", apiErr.Msg)
-		} else if apiErr != nil && isUserContinue && apiErr.Type == shared.ApiErrorTypeContinueNoMessages {
+		} else if apiErr != nil && isUserContinue && apiErr.Type == internal.ApiErrorTypeContinueNoMessages {
 			fmt.Println("🤷‍♂️ There's no plan yet to continue")
 			fmt.Println()
 			term.PrintCmds("", "tell")
