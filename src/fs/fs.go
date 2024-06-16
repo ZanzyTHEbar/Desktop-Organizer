@@ -2,6 +2,9 @@ package fs
 
 import (
 	"context"
+	"desktop-cleaner/internal"
+	"desktop-cleaner/term"
+	"desktop-cleaner/types"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -114,7 +117,8 @@ func LoadConfig(filePath string) (*Config, error) {
 
 	cfg, err := ini.Load(filePath)
 	if err != nil {
-		return nil, term.OutputErrorAndExit("failed to read config file: %v", err)
+		term.OutputErrorAndExit("failed to read config file: %v", err)
+		return nil, err
 	}
 
 	fileTypesSection := cfg.Section("file_types")
@@ -597,7 +601,7 @@ func GetChildProjectIdsWithPaths(ctx context.Context) ([][2]string, error) {
 	return childProjectIds, nil
 }
 
-func GetBaseDirForContexts(contexts []*shared.Context) string {
+func GetBaseDirForContexts(contexts []*internal.Context) string {
 	var paths []string
 
 	for _, context := range contexts {

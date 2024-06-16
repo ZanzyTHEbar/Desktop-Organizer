@@ -22,7 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"desktop-cleaner/cmd/fs"
+	"desktop-cleaner/term"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -31,42 +34,52 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "desktop-cleaner",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var helpShowAll bool
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+// rootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
+	Use:   "desktop-cleaner [command] [flags]",
+	Short: "DesktopCleaner is a tool to automate the clean up a specified directory",
+	Run:   run,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+	if err := RootCmd.Execute(); err != nil {
+		term.OutputErrorAndExit("Error executing root command: %v", err)
+		log.Fatalf("Error executing root command: %v", err)
 	}
+}
+
+func run(cmd *cobra.Command, args []string) {
+}
+
+func addSubCommandPalettes() {
+	RootCmd.AddCommand(fs.FSCmd)
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.desktop-cleaner/.desktop-cleaner.ini)")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.desktop-cleaner.yaml)")
+	var helpCmd = &cobra.Command{
+		Use:     "help",
+		Aliases: []string{"h"},
+		Short:   "Display help for DesktopCleaner",
+		Long:    `Display help for DesktopCleaner.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			term.PrintCustomHelp(helpShowAll)
+		},
+	}
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.AddCommand(helpCmd)
+
+	// add an --all/-a flag
+	helpCmd.Flags().BoolVarP(&helpShowAll, "all", "a", false, "Show all commands")
+
+	addSubCommandPalettes()
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -81,7 +94,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".desktop-cleaner" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
+		viper.SetConfigType("ini")
 		viper.SetConfigName(".desktop-cleaner")
 	}
 
