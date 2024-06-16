@@ -26,7 +26,7 @@ func init() {
 			cloudApiHost = "http://localhost:8080"
 		}
 	} else {
-		cloudApiHost = "https://api.plandex.ai"
+		cloudApiHost = "https://api.desktop-cleaner.com"
 	}
 }
 
