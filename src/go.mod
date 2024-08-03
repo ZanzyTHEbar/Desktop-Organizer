@@ -11,11 +11,11 @@ require (
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/glow v1.5.1
-	github.com/charmbracelet/lipgloss v0.11.0
+	github.com/charmbracelet/lipgloss v0.12.1
 	github.com/cqroot/prompt v0.9.3
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
-	github.com/fatih/color v1.14.1
+	github.com/fatih/color v1.17.0
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
@@ -28,7 +28,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/xlab/treeprint v1.2.0
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
-	golang.org/x/term v0.21.0
+	golang.org/x/term v0.22.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
@@ -37,7 +37,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/charmbracelet/x/ansi v0.1.1 // indirect
+	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/cqroot/multichoose v0.1.1 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
@@ -51,7 +51,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -73,7 +73,7 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

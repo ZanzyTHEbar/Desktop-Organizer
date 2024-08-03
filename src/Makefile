@@ -2,7 +2,7 @@
 BUILD_FLAGS := -v
 
 # Binary name
-BINARY_NAME = hbat-blmp-api-
+BINARY_NAME = hbat-DesktopCleaner-api-
 #BINARY_NAME := $(BINARY_NAME)$(shell date +'%Y%m%d%H%M%S')
 BINARY_PATH := bin
 

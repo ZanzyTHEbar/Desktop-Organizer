@@ -1,8 +1,10 @@
 package terminal
 
 // Terminal interface defines methods for terminal operations
-type Terminal interface {
-	OutputErrorAndExit(format string, a ...interface{})
-	OutputInfo(format string, a ...interface{})
-	OutputSuccess(format string, a ...interface{})
+type TerminalI interface {
+	OutputErrorAndExit(msg string, args ...interface{})
+	OutputInfo(msg string, args ...interface{})
+	OutputSuccess(msg string, args ...interface{})
+	ConfirmYesNo(msg string) bool
+	ToggleSpinner()
 }
