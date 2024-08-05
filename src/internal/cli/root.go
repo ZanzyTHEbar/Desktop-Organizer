@@ -43,8 +43,9 @@ func NewRootCMD(params *CmdParams) *RootCMD {
 func NewRoot(params *CmdParams) *cobra.Command {
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd := &cobra.Command{
-		Use:   "desktop-cleaner [command] [flags]",
-		Short: "DesktopCleaner is a tool to automate the clean up a specified directory",
+		Use:     "desktop-cleaner [command] [flags]",
+		Aliases: []string{"dcx"},
+		Short:   "DesktopCleaner is a tool to automate the clean up a specified directory",
 	}
 
 	for _, cmd := range params.Palette {

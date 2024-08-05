@@ -3,6 +3,7 @@ package git
 import (
 	"desktop-cleaner/internal/cli"
 	"desktop-cleaner/internal/fs"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -44,12 +45,12 @@ func rewind(params *cli.CmdParams, args []string) {
 		stepsOrSha = "1"
 	}
 
-	params.Term.ToggleSpinner(true)
+	params.Term.ToggleSpinner(true, fmt.Sprintf("Rewinding to %s ...", stepsOrSha))
 
 	// Rewind to the target sha
 	if err := fs.GitRewind(stepsOrSha); err != nil {
 		params.Term.OutputErrorAndExit("Error rewinding to %s: %v", stepsOrSha, err)
 	}
 
-	params.Term.ToggleSpinner(false)
+	params.Term.ToggleSpinner(false, "")
 }

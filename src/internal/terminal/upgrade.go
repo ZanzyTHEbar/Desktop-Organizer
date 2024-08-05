@@ -39,8 +39,8 @@ func (up *Upgrade) CheckForUpgrade() {
 		return
 	}
 
-	up.term.ToggleSpinner(true)
-	defer up.term.ToggleSpinner(false)
+	up.term.ToggleSpinner(true, "Checking for updates ...")
+	defer up.term.ToggleSpinner(false, "")
 	// TODO: Migrate to Desktop Cleaner's version URL
 	latestVersionURL := "https://raw.githubusercontent.com/ZanzyTHEbar/DesktopCleaner/tree/main/cli-version.txt"
 	resp, err := http.Get(latestVersionURL)
@@ -72,7 +72,7 @@ func (up *Upgrade) CheckForUpgrade() {
 	}
 
 	if latestVersion.GreaterThan(currentVersion) {
-		up.term.ToggleSpinner(false)
+		up.term.ToggleSpinner(false, "")
 		fmt.Println("A new version of DesktopCleaner is available:", ColorHiGreen.Bold(true).Render(versionStr))
 		fmt.Printf("Current version: %s\n", ColorHiCyan.Bold(true).Render(version.Version))
 		confirmed := up.term.ConfirmYesNo("Upgrade to the latest version?")
@@ -84,7 +84,7 @@ func (up *Upgrade) CheckForUpgrade() {
 				up.term.OutputErrorAndExit("Failed to upgrade: %v", err)
 				return
 			}
-			up.term.ToggleSpinner(false)
+			up.term.ToggleSpinner(false, "")
 			up.RestartDesktopCleaner()
 		} else {
 			fmt.Println("Note: set DESKTOP_CLEANER_SKIP_UPGRADE=1 to stop upgrade prompts")

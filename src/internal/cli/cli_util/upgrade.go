@@ -36,7 +36,7 @@ func NewUpgrade(params *cli.CmdParams) *cobra.Command {
 
 func upgrade(params *cli.CmdParams) {
 
-	params.Term.ToggleSpinner(true)
+	params.Term.ToggleSpinner(true, "Checking for updates ...")
 
 	// Trigger Upgrade logic from the Upgrade.go file
 

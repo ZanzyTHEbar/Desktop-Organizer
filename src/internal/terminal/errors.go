@@ -13,7 +13,7 @@ func (t *Terminal) OutputSimpleError(msg string, args ...interface{}) {
 }
 
 func (t *Terminal) OutputErrorAndExit(msg string, args ...interface{}) {
-	t.ToggleSpinner(false)
+	t.ToggleSpinner(false, "")
 	msg = fmt.Sprintf(msg, args...)
 
 	displayMsg := ""
@@ -70,7 +70,7 @@ func (t *Terminal) OutputErrorAndExit(msg string, args ...interface{}) {
 }
 
 func (t *Terminal) OutputUnformattedErrorAndExit(msg string) {
-	t.ToggleSpinner(false)
+	t.ToggleSpinner(false, "")
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(1)
 }
@@ -83,6 +83,11 @@ func (t *Terminal) OutputInfo(msg string, args ...interface{}) {
 func (t *Terminal) OutputSuccess(msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fmt.Fprintln(os.Stdout, ColorHiGreen.Render("✅ "+utils.Capitalize(msg)))
+}
+
+func (t *Terminal) OutputWarning(msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
+	fmt.Fprintln(os.Stdout, ColorHiYellow.Render("⚠️ "+utils.Capitalize(msg)))
 }
 
 func (t *Terminal) ConfirmYesNo(msg string) bool {

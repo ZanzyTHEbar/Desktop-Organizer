@@ -46,13 +46,13 @@ func (t *Terminal) stopSpinner() {
 	active = false
 }
 
-func (t *Terminal) ToggleSpinner(toggle bool) {
+func (t *Terminal) ToggleSpinner(toggle bool, msg string) {
 	if !toggle {
 		t.stopSpinner()
 		return
 	}
 
-	t.startSpinner(lastMessage)
+	t.startSpinner(msg)
 }
 
 func (t *Terminal) ResumeSpinner() {
