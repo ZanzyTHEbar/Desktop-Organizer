@@ -42,7 +42,7 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 	organizeCmd.Flags().BoolVarP(&fileParams.Recursive, "recursive", "r", false, "Recursively organize files")
 	organizeCmd.Flags().IntVarP(&fileParams.MaxDepth, "max-depth", "x", -1, "Maximum depth for recursion")
 	organizeCmd.Flags().BoolVarP(&fileParams.GitEnabled, "git-enabled", "g", false, "Enable Git operations")
-	organizeCmd.Flags().BoolVarP(&fileParams.CopyFiles, "copy", "c", false, "Enable move as Copy")
+	organizeCmd.Flags().BoolVarP(&fileParams.CopyFiles, "copy", "c", false, "Enable move as Copy operation, required when moving files across partitions. If not enabled, will default to copy when move is not possible.")
 	organizeCmd.Flags().StringVarP(&srcDir, "srcDir", "d", "", "Destination directory to organize files from")
 	organizeCmd.Flags().StringVarP(&targetDir, "target", "t", "", "Target directory to organize files into")
 
