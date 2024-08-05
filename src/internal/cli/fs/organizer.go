@@ -12,7 +12,8 @@ type OrganizeCMD struct {
 	Organize *cobra.Command
 }
 
-var destinationDirectory string
+var srcDir string
+var targetDir string
 var fileParams deskFS.FilePathParams
 
 func NewOrganizeCMD(params *cli.CmdParams) *OrganizeCMD {
@@ -28,7 +29,7 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 		Short:   "Organize files in the specified directory, based on the configuration",
 		Long:    `Organize files based on the configuration. Optionally specify a destination directory. If not provided, the current working directory is used.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := organizeFiles(args, params); err != nil {
+			if err := organizeFiles(params); err != nil {
 				params.Term.OutputErrorAndExit("Error organizing files: %v", err)
 			}
 		},
@@ -41,34 +42,38 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 	organizeCmd.Flags().BoolVar(&fileParams.ForceSkipIgnore, "force-skip-ignore", false, "Force skip ignored files")
 	organizeCmd.Flags().IntVar(&fileParams.MaxDepth, "max-depth", -1, "Maximum depth for recursion")
 	organizeCmd.Flags().BoolVar(&fileParams.GitEnabled, "git-enabled", false, "Enable Git operations")
-	organizeCmd.Flags().StringVarP(&destinationDirectory, "destination", "d", "", "Destination directory to organize files into")
+	organizeCmd.Flags().StringVarP(&srcDir, "srcDir", "d", "", "Destination directory to organize files from")
+	organizeCmd.Flags().StringVarP(&targetDir, "target", "t", "", "Target directory to organize files into")
 
 	return organizeCmd
 }
 
-func organizeFiles(args []string, params *cli.CmdParams) error {
-	var destDir string
-	if len(args) > 0 {
-		destDir = args[0]
-	} else {
+func organizeFiles(params *cli.CmdParams) error {
+
+	// Set default directories if not provided
+	if srcDir == "" {
 		var err error
-		destDir, err = os.Getwd()
+		srcDir, err = os.Getwd()
 		if err != nil {
 			params.Term.OutputErrorAndExit("Error getting current working directory: %v", err)
 		}
 	}
 
+	if targetDir == "" {
+		targetDir = srcDir
+	}
+
 	params.Term.ToggleSpinner(true, "Organizing files...")
 
 	// Check if the destination directory is a Git repository
-	if deskFS.IsGitRepo(destDir) {
+	if deskFS.IsGitRepo(srcDir) {
 		params.Term.OutputInfo("Git repository detected.")
 	} else {
 		params.Term.OutputWarning("Git repository not detected. Proceeding without Git operations.")
 	}
 
 	// Perform the organization actions
-	if err := params.DeskFS.EnhancedOrganize(destDir, *params.DeskFS.InstanceConfig, &fileParams); err != nil {
+	if err := params.DeskFS.EnhancedOrganize(srcDir, targetDir, *params.DeskFS.InstanceConfig, &fileParams); err != nil {
 		params.Term.OutputErrorAndExit("Error organizing files: %v", err)
 	}
 

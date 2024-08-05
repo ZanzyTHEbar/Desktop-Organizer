@@ -553,14 +553,18 @@ func (dfs *DesktopFS) MoveToTrash(path string) error {
 }
 
 // Move or copy files based on the configuration
-func (dfs *DesktopFS) EnhancedOrganize(directory string, cfg Config, params *FilePathParams) error {
-	targetDir := directory
+func (dfs *DesktopFS) EnhancedOrganize(srcDir string, targetDir string, cfg Config, params *FilePathParams) error {
+
+	if targetDir == "" {
+		targetDir = srcDir
+	}
+
 	if cfg.TargetDir != "" {
 		targetDir = cfg.TargetDir
 	}
 
 	if params.GitEnabled && dfs.ProjectRootIsGitRepo() {
-		if err := InitGitRepo(targetDir); err != nil {
+		if err := InitGitRepo(srcDir); err != nil {
 			return err
 		}
 	}
@@ -569,15 +573,15 @@ func (dfs *DesktopFS) EnhancedOrganize(directory string, cfg Config, params *Fil
 	var err error
 
 	if params.GitEnabled {
-		cleanerPaths, err := dfs.GetPaths(directory, directory)
+		cleanerPaths, err := dfs.GetPaths(srcDir, srcDir)
 		if err != nil {
 			return err
 		}
 		for path := range cleanerPaths.ActivePaths {
-			paths = append(paths, filepath.Join(directory, path))
+			paths = append(paths, filepath.Join(srcDir, path))
 		}
 	} else {
-		paths, err = dfs.ParseInputPaths([]string{directory}, &FilePathParams{Recursive: params.Recursive, NamesOnly: params.NamesOnly})
+		paths, err = dfs.ParseInputPaths([]string{srcDir}, &FilePathParams{Recursive: params.Recursive, NamesOnly: params.NamesOnly})
 		if err != nil {
 			return err
 		}
@@ -597,8 +601,22 @@ func (dfs *DesktopFS) EnhancedOrganize(directory string, cfg Config, params *Fil
 			continue
 		}
 
-		if info.IsDir() && path != directory {
-			continue
+		// Skip subdirectories unless Recursive flag is set
+		if info.IsDir() {
+			if path != srcDir && !params.Recursive {
+				continue
+			}
+			if path != srcDir {
+				wg.Add(1)
+				go func(srcDir string) {
+					defer wg.Done()
+					if err := dfs.EnhancedOrganize(srcDir, targetDir, cfg, params); err != nil {
+						errCh <- err
+						return
+					}
+				}(path)
+				continue
+			}
 		}
 
 		ext := strings.ToLower(filepath.Ext(info.Name()))
@@ -652,7 +670,7 @@ func (dfs *DesktopFS) EnhancedOrganize(directory string, cfg Config, params *Fil
 	}
 
 	if params.GitEnabled && dfs.ProjectRootIsGitRepo() {
-		if err := GitAddAndCommit(targetDir, "Organized files", true); err != nil {
+		if err := GitAddAndCommit(srcDir, "Organized files", true); err != nil {
 			return err
 		}
 	}
