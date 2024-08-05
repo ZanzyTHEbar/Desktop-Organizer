@@ -3,6 +3,7 @@ package main
 import (
 	"desktop-cleaner/internal/cli"
 	"desktop-cleaner/internal/cli/cli_util"
+	"desktop-cleaner/internal/cli/fs"
 	"desktop-cleaner/internal/cli/git"
 	desktopFS "desktop-cleaner/internal/fs"
 	"desktop-cleaner/internal/terminal"
@@ -39,6 +40,7 @@ func generatePalette(params *cli.CmdParams) []*cobra.Command {
 	helpUtil := cli_util.NewHelpCMD(params)
 	versionUtil := cli_util.NewVersionCMD(params)
 	upgradeUtil := cli_util.NewUpgradeCMD(params)
+	organize := fs.NewOrganizeCMD(params)
 
 	// Add commands here
 	return []*cobra.Command{
@@ -46,5 +48,6 @@ func generatePalette(params *cli.CmdParams) []*cobra.Command {
 		helpUtil.Help,
 		versionUtil.Version,
 		upgradeUtil.Upgrade,
+		organize.Organize,
 	}
 }
