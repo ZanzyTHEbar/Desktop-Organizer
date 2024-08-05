@@ -36,12 +36,13 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 	}
 
 	// Define flags and configuration settings
-	organizeCmd.Flags().BoolVar(&fileParams.Recursive, "recursive", false, "Recursively organize files")
 	organizeCmd.Flags().BoolVar(&fileParams.RemoveAfter, "remove", false, "Remove files after organizing")
 	organizeCmd.Flags().BoolVar(&fileParams.NamesOnly, "names-only", false, "Organize by names only")
 	organizeCmd.Flags().BoolVar(&fileParams.ForceSkipIgnore, "force-skip-ignore", false, "Force skip ignored files")
-	organizeCmd.Flags().IntVar(&fileParams.MaxDepth, "max-depth", -1, "Maximum depth for recursion")
-	organizeCmd.Flags().BoolVar(&fileParams.GitEnabled, "git-enabled", false, "Enable Git operations")
+	organizeCmd.Flags().BoolVarP(&fileParams.Recursive, "recursive", "r", false, "Recursively organize files")
+	organizeCmd.Flags().IntVarP(&fileParams.MaxDepth, "max-depth", "x", -1, "Maximum depth for recursion")
+	organizeCmd.Flags().BoolVarP(&fileParams.GitEnabled, "git-enabled", "g", false, "Enable Git operations")
+	organizeCmd.Flags().BoolVarP(&fileParams.CopyFiles, "copy", "c", false, "Enable move as Copy")
 	organizeCmd.Flags().StringVarP(&srcDir, "srcDir", "d", "", "Destination directory to organize files from")
 	organizeCmd.Flags().StringVarP(&targetDir, "target", "t", "", "Target directory to organize files into")
 

@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 
 	ignore "github.com/sabhiram/go-gitignore"
 )
@@ -25,6 +27,7 @@ type CleanerPaths struct {
 type FilePathParams struct {
 	Recursive       bool
 	RemoveAfter     bool
+	CopyFiles       bool
 	NamesOnly       bool
 	ForceSkipIgnore bool
 	MaxDepth        int
@@ -546,9 +549,29 @@ func (dfs *DesktopFS) Copy(src, dst string, recursive, remove bool) error {
 	return nil
 }
 
+func (dfs *DesktopFS) Move(src, dst string, recursive, removeAfter bool) error {
+	if recursive {
+		return fmt.Errorf("move does not support recursive operation")
+	}
+	if err := os.Rename(src, dst); err != nil {
+		// If rename fails due to cross-device link, fallback to copy and delete
+		if linkErr, ok := err.(*os.LinkError); ok && linkErr.Err == syscall.EXDEV {
+			if err := dfs.Copy(src, dst, false, removeAfter); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
 // Function to move files to trash
 func (dfs *DesktopFS) MoveToTrash(path string) error {
-	// Implementation of moving files to trash
+	if err := os.Rename(path, filepath.Join(dfs.CacheDir, filepath.Base(path))); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -582,6 +605,7 @@ func (dfs *DesktopFS) EnhancedOrganize(srcDir string, targetDir string, cfg Conf
 		}
 	} else {
 		paths, err = dfs.ParseInputPaths([]string{srcDir}, &FilePathParams{Recursive: params.Recursive, NamesOnly: params.NamesOnly})
+		slog.Debug("Parsed paths, moving on to organizing files ...")
 		if err != nil {
 			return err
 		}
@@ -591,6 +615,7 @@ func (dfs *DesktopFS) EnhancedOrganize(srcDir string, targetDir string, cfg Conf
 	errCh := make(chan error, 1)
 
 	for _, path := range paths {
+		slog.Debug(fmt.Sprintf("Processing path: %s", path))
 		info, err := os.Stat(path)
 		if err != nil {
 			return err
@@ -602,22 +627,23 @@ func (dfs *DesktopFS) EnhancedOrganize(srcDir string, targetDir string, cfg Conf
 		}
 
 		// Skip subdirectories unless Recursive flag is set
-		if info.IsDir() {
-			if path != srcDir && !params.Recursive {
+		if info.IsDir() && path != srcDir {
+			if !params.Recursive {
+				slog.Warn(fmt.Sprintf("Skipping directory %s - recursion is not set.", path))
 				continue
 			}
-			if path != srcDir {
-				wg.Add(1)
-				go func(srcDir string) {
-					defer wg.Done()
-					if err := dfs.EnhancedOrganize(srcDir, targetDir, cfg, params); err != nil {
-						errCh <- err
-						return
-					}
-				}(path)
-				continue
-			}
+			wg.Add(1)
+			go func(_srcDir string) {
+				defer wg.Done()
+				if err := dfs.EnhancedOrganize(_srcDir, targetDir, cfg, params); err != nil {
+					errCh <- err
+					return
+				}
+			}(path)
+			continue
 		}
+
+		slog.Debug("Generating folder structure ...")
 
 		ext := strings.ToLower(filepath.Ext(info.Name()))
 		var folder string
@@ -635,6 +661,8 @@ func (dfs *DesktopFS) EnhancedOrganize(srcDir string, targetDir string, cfg Conf
 			}
 		}
 
+		slog.Debug(fmt.Sprintf("Folder: %s, found - %v", folder, found))
+
 		if !found {
 			continue
 		}
@@ -643,19 +671,33 @@ func (dfs *DesktopFS) EnhancedOrganize(srcDir string, targetDir string, cfg Conf
 			folder = filepath.Join(folder, nested)
 		}
 
+		slog.Debug(fmt.Sprintf("Folder Path: %s", folder))
+
 		destDir := filepath.Join(targetDir, folder)
+
+		slog.Debug(fmt.Sprintf("Destination Directory: %s", destDir))
+
 		if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
 			return err
 		}
 
 		destPath := filepath.Join(destDir, info.Name())
 
+		slog.Debug(fmt.Sprintf("Destination Path: %s", destPath))
+
 		wg.Add(1)
 		go func(srcPath, dstPath string) {
 			defer wg.Done()
-			if err := dfs.Copy(srcPath, dstPath, params.Recursive, params.RemoveAfter); err != nil {
-				errCh <- err
-				return
+			if params.CopyFiles {
+				if err := dfs.Copy(srcPath, dstPath, params.Recursive, params.RemoveAfter); err != nil {
+					errCh <- err
+					return
+				}
+			} else {
+				if err := dfs.Move(srcPath, dstPath, params.Recursive, params.RemoveAfter); err != nil {
+					errCh <- err
+					return
+				}
 			}
 		}(path, destPath)
 	}
@@ -701,22 +743,25 @@ func (dfs *DesktopFS) ParseInputPaths(fileOrDirPaths []string, params *FilePathP
 					return firstErr // If an error was encountered, stop walking
 				}
 
+				// Skip subdirectories unless Recursive flag is set
+				if info.IsDir() && p != path && !params.Recursive {
+					return filepath.SkipDir
+				}
+
 				if info.IsDir() {
 					if info.Name() == ".git" {
 						return filepath.SkipDir
 					}
 
-					if !(params.Recursive || params.NamesOnly) {
-						// log.Println("path", path, "info.Name()", info.Name())
-
-						return fmt.Errorf("cannot process directory %s: --recursive or --tree flag not set", path)
+					// calculate directory depth from base
+					depth := strings.Count(path[len(p):], string(filepath.Separator))
+					if params.MaxDepth != -1 && depth > params.MaxDepth {
+						return filepath.SkipDir
 					}
 
-					// calculate directory depth from base
-					// depth := strings.Count(path[len(p):], string(filepath.Separator))
-					// if params.MaxDepth != -1 && depth > params.MaxDepth {
-					// 	return filepath.SkipDir
-					// }
+					//if !(params.Recursive || params.NamesOnly) {
+					//	return fmt.Errorf("cannot process directory %s: --recursive or --names-only flag not set", path)
+					//}
 
 					if params.NamesOnly {
 						// add directory name to results
@@ -745,6 +790,7 @@ func (dfs *DesktopFS) ParseInputPaths(fileOrDirPaths []string, params *FilePathP
 	if firstErr != nil {
 		return nil, firstErr
 	}
+	slog.Info(fmt.Sprintf("Parsed %d paths: %v", len(resPaths), resPaths))
 
 	return resPaths, nil
 }
