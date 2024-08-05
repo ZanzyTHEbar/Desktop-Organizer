@@ -1,4 +1,4 @@
-package cli
+package cli_util
 
 import (
 	"desktop-cleaner/internal/cli"

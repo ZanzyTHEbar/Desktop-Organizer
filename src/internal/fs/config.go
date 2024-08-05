@@ -1,6 +1,8 @@
 package fs
 
 import (
+	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -35,7 +37,7 @@ type Config struct {
 func NewConfig(path *string) (*Config, error) {
 	cfg := viper.New()
 
-	cfg.SetConfigName(".config") // name of config file (without extension)
+	cfg.SetConfigName(".desktop_cleaner") // name of config file (without extension)
 
 	if path != nil {
 		cfg.SetConfigFile(*path)
@@ -61,6 +63,12 @@ func NewConfig(path *string) (*Config, error) {
 	if err := cfg.ReadInConfig(); err != nil {
 		// Create a default config file if it doesn't exist
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+
+			// set the default config file location
+			cfg.SetConfigFile(filepath.Join("$HOME/.config/desktop_cleaner"))
+
+			slog.Warn(fmt.Sprintf("Config file not found. Creating a default config file at %s", cfg.ConfigFileUsed()))
+
 			config = *getDefaultConfig()
 
 			// Set the cache directory to the same directory as the config file

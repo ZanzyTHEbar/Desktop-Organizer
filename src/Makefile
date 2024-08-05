@@ -2,14 +2,14 @@
 BUILD_FLAGS := -v
 
 # Binary name
-BINARY_NAME = hbat-DesktopCleaner-api-
+BINARY_NAME = hbat-desktopcleaner-
 #BINARY_NAME := $(BINARY_NAME)$(shell date +'%Y%m%d%H%M%S')
 BINARY_PATH := bin
 
 # Detect the operating system
 ifeq ($(OS),Windows_NT)
 BINARY_NAME := $(BINARY_NAME)windows.exe
-BINARY_PATH := \$(BINARY_NAME)
+BINARY_PATH := $(BINARY_PATH)\$(BINARY_NAME)
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
@@ -28,11 +28,11 @@ else
     ifneq ($(filter arm%,$(UNAME_P)),)
 	BINARY_NAME := $(BINARY_NAME)arm
     endif
-BINARY_PATH := /$(BINARY_NAME)
+BINARY_PATH := $(BINARY_PATH)/$(BINARY_NAME)
 endif
 
 
-MODULE_PATH := cmd/api/main.go
+MODULE_PATH := cmd/app/main.go
 
 # Default target
 .DEFAULT_GOAL := build
@@ -41,6 +41,8 @@ all: build
 
 build:
 	@echo "Building $(BINARY_NAME) ..."
+	@echo "Moving binary to $(BINARY_PATH) ..."
+	@mkdir -p $(BINARY_PATH)
 	@go build $(BUILD_FLAGS) -o $(BINARY_PATH) $(MODULE_PATH)
 
 clean-all:
@@ -97,16 +99,3 @@ watch:
 	fi
 
 .PHONY: all build run test clean
-
-# TODO: Database Helpers
-
-#up:
-
-#down:
-
-#drop:
-
-#migrations:
-
-#seed:
-	

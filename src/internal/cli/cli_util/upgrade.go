@@ -1,4 +1,4 @@
-package cli
+package cli_util
 
 import (
 	"desktop-cleaner/internal/cli"
@@ -22,7 +22,7 @@ func NewUpgradeCMD(params *cli.CmdParams) *UpgradeCMD {
 
 func NewUpgrade(params *cli.CmdParams) *cobra.Command {
 	UpgradeCmd := &cobra.Command{
-		Use:     "Upgrade ",
+		Use:     "upgrade ",
 		Aliases: []string{"u"},
 		Short:   "Upgrade DesktopCleaner to the latest version",
 		Args:    cobra.MaximumNArgs(1),

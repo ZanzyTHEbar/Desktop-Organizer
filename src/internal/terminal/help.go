@@ -29,7 +29,7 @@ func printCmds(w io.Writer, prefix string, colors []lipgloss.Color, cmds ...stri
 		if alias != "" {
 			containsFull := strings.Contains(cmd, alias)
 			if containsFull {
-				cmd = strings.Replace(cmd, alias, fmt.Sprint("(%s)", alias), 1)
+				cmd = strings.Replace(cmd, alias, fmt.Sprintf("(%s)", alias), 1)
 			} else {
 				cmd = fmt.Sprintf("%s (%s)", cmd, alias)
 			}
@@ -41,7 +41,7 @@ func printCmds(w io.Writer, prefix string, colors []lipgloss.Color, cmds ...stri
 }
 
 func PrintCustomCmd(prefix, cmd, alias, desc string) {
-	cmd = strings.Replace(cmd, alias, fmt.Sprint("(%s)", alias), 1)
+	cmd = strings.Replace(cmd, alias, fmt.Sprintf("(%s)", alias), 1)
 	styled := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF00FF"))
 	fmt.Printf("%s%s 👉 %s\n", prefix, styled.Bold(true).Render(cmd), styled.Italic(true).Render(desc))
 }

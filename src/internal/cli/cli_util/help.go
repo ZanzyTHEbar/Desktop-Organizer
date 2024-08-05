@@ -1,4 +1,4 @@
-package cli
+package cli_util
 
 import (
 	"desktop-cleaner/internal/cli"
@@ -20,7 +20,7 @@ func NewHelpCMD(params *cli.CmdParams) *HelpCMD {
 
 func NewHelp(params *cli.CmdParams) *cobra.Command {
 	helpCmd := &cobra.Command{
-		Use:     "help",
+		Use:     "detailed_help",
 		Aliases: []string{"h"},
 		Short:   "Display help for DesktopCleaner",
 		Long:    `Display help for DesktopCleaner.`,

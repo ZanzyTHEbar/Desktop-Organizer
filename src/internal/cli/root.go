@@ -22,6 +22,8 @@ THE SOFTWARE.
 package cli
 
 import (
+	"desktop-cleaner/internal/logger"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -49,9 +51,7 @@ func NewRoot(params *CmdParams) *cobra.Command {
 		rootCmd.AddCommand(cmd)
 	}
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.desktop-cleaner/.desktop-cleaner.ini)")
-
-	//cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/.desktop_cleaner/.desktop_cleaner.toml)")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -61,6 +61,8 @@ func NewRoot(params *CmdParams) *cobra.Command {
 	} else {
 		params.DeskFS.InitConfig(nil)
 	}
+
+	logger.InitLogger(params.DeskFS.InstanceConfig)
 
 	return rootCmd
 }

@@ -1,4 +1,4 @@
-package cli
+package git
 
 import (
 	"desktop-cleaner/internal/cli"
