@@ -29,14 +29,14 @@ func NewRewind(params *cli.CmdParams) *cobra.Command {
 	`,
 		Args: cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			rewind(params, cmd, args)
+			rewind(params, args)
 		},
 	}
 
 	return rewindCmd
 }
 
-func rewind(params *cli.CmdParams, cmd *cobra.Command, args []string) {
+func rewind(params *cli.CmdParams, args []string) {
 	var stepsOrSha string
 	if len(args) > 0 {
 		stepsOrSha = args[0]

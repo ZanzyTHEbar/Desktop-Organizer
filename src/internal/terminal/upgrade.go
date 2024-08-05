@@ -1,4 +1,4 @@
-package utils
+package terminal
 
 import (
 	"archive/tar"
@@ -17,11 +17,20 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"github.com/fatih/color"
 	"github.com/inconshreveable/go-update"
 )
 
-func checkForUpgrade() {
+type Upgrade struct {
+	term *Terminal
+}
+
+func NewUpgrade(term *Terminal) *Upgrade {
+	return &Upgrade{
+		term: term,
+	}
+}
+
+func (up *Upgrade) CheckForUpgrade() {
 	if os.Getenv("DESKTOP_CLEANER_SKIP_UPGRADE") != "" {
 		return
 	}
@@ -30,8 +39,8 @@ func checkForUpgrade() {
 		return
 	}
 
-	term.StartSpinner("")
-	defer term.StopSpinner()
+	up.term.ToggleSpinner(true)
+	defer up.term.ToggleSpinner(false)
 	// TODO: Migrate to Desktop Cleaner's version URL
 	latestVersionURL := "https://raw.githubusercontent.com/ZanzyTHEbar/DesktopCleaner/tree/main/cli-version.txt"
 	resp, err := http.Get(latestVersionURL)
@@ -63,31 +72,27 @@ func checkForUpgrade() {
 	}
 
 	if latestVersion.GreaterThan(currentVersion) {
-		term.StopSpinner()
-		fmt.Println("A new version of DesktopCleaner is available:", color.New(color.Bold, term.ColorHiGreen).Sprint(versionStr))
-		fmt.Printf("Current version: %s\n", color.New(color.Bold, term.ColorHiCyan).Sprint(version.Version))
-		confirmed, err := term.ConfirmYesNo("Upgrade to the latest version?")
-		if err != nil {
-			log.Println("Error reading input:", err)
-			return
-		}
+		up.term.ToggleSpinner(false)
+		fmt.Println("A new version of DesktopCleaner is available:", ColorHiGreen.Bold(true).Render(versionStr))
+		fmt.Printf("Current version: %s\n", ColorHiCyan.Bold(true).Render(version.Version))
+		confirmed := up.term.ConfirmYesNo("Upgrade to the latest version?")
 
 		if confirmed {
-			term.ResumeSpinner()
-			err := doUpgrade(latestVersion.String())
+			up.term.ResumeSpinner()
+			err := up.DoUpgrade(latestVersion.String())
 			if err != nil {
-				term.OutputErrorAndExit("Failed to upgrade: %v", err)
+				up.term.OutputErrorAndExit("Failed to upgrade: %v", err)
 				return
 			}
-			term.StopSpinner()
-			restartDesktopCleaner()
+			up.term.ToggleSpinner(false)
+			up.RestartDesktopCleaner()
 		} else {
 			fmt.Println("Note: set DESKTOP_CLEANER_SKIP_UPGRADE=1 to stop upgrade prompts")
 		}
 	}
 }
 
-func doUpgrade(version string) error {
+func (up *Upgrade) DoUpgrade(version string) error {
 	tag := fmt.Sprintf("cli/v%s", version)
 	escapedTag := url.QueryEscape(tag)
 
@@ -149,10 +154,10 @@ func doUpgrade(version string) error {
 	return nil
 }
 
-func restartDesktopCleaner() {
+func (up *Upgrade) RestartDesktopCleaner() {
 	exe, err := os.Executable()
 	if err != nil {
-		term.OutputErrorAndExit("Failed to determine executable path: %v", err)
+		up.term.OutputErrorAndExit("Failed to determine executable path: %v", err)
 	}
 
 	cmd := exec.Command(exe, os.Args[1:]...)
@@ -161,7 +166,7 @@ func restartDesktopCleaner() {
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
 	if err != nil {
-		term.OutputErrorAndExit("Failed to restart: %v", err)
+		up.term.OutputErrorAndExit("Failed to restart: %v", err)
 	}
 
 	err = cmd.Wait()
@@ -170,7 +175,7 @@ func restartDesktopCleaner() {
 	if exitErr, ok := err.(*exec.ExitError); ok {
 		os.Exit(exitErr.ExitCode())
 	} else if err != nil {
-		term.OutputErrorAndExit("Failed to restart: %v", err)
+		up.term.OutputErrorAndExit("Failed to restart: %v", err)
 	}
 
 	os.Exit(0)
