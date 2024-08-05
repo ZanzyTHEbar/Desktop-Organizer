@@ -17,29 +17,44 @@ const (
 	DebugLevelOff   DebugLevelType = "off"
 )
 
+type Logger struct {
+	Style string
+	Level DebugLevelType
+}
+
 // Config holds the mapping of file types to extensions
 type Config struct {
 	FileTypes  map[string][]string `mapstructure:"file_types"`
 	TargetDir  string              `mapstructure:"target_dir"`
 	NestedDirs map[string][]string `mapstructure:"nested_dirs"`
 	CacheDir   string              `mapstructure:"cache_dir"`
-	DebugLevel DebugLevelType
+	Logger     Logger
 	cfg        *viper.Viper
 }
 
-func NewConfig() (*Config, error) {
+func NewConfig(path *string) (*Config, error) {
 	cfg := viper.New()
 
-	cfg.SetConfigName(".config")                       // name of config file (without extension)
-	cfg.AddConfigPath("/etc/desktop_cleaner")          // look for config in the home directory
-	cfg.AddConfigPath("$HOME/.config/desktop_cleaner") // look for config in the home directory
-	cfg.AddConfigPath(".")
+	cfg.SetConfigName(".config") // name of config file (without extension)
+
+	if path != nil {
+		cfg.SetConfigFile(*path)
+	} else {
+		cfg.AddConfigPath("/etc/desktop_cleaner")          // look for config in the home directory
+		cfg.AddConfigPath("$HOME/.config/desktop_cleaner") // look for config in the home directory
+		cfg.AddConfigPath(".")
+	}
+
+	logger := Logger{
+		Style: "json",
+		Level: DebugLevelInfo,
+	}
 
 	config := Config{
 		FileTypes:  make(map[string][]string),
 		TargetDir:  "",
 		NestedDirs: make(map[string][]string),
-		DebugLevel: DebugLevelInfo,
+		Logger:     logger,
 		cfg:        cfg,
 	}
 
@@ -47,7 +62,7 @@ func NewConfig() (*Config, error) {
 		// Create a default config file if it doesn't exist
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			config = *getDefaultConfig()
-			
+
 			// Set the cache directory to the same directory as the config file
 			config.CacheDir = filepath.Join(filepath.Dir(cfg.ConfigFileUsed()), config.CacheDir)
 
@@ -71,7 +86,8 @@ func (c *Config) SaveConfig(config *Config, filePath string) error {
 	c.cfg.Set("file_types", config.FileTypes)
 	c.cfg.Set("target_dir", config.TargetDir)
 	c.cfg.Set("nested_dirs", config.NestedDirs)
-	c.cfg.Set("debug_level", config.DebugLevel)
+	c.cfg.Set("logger.style", config.Logger.Style)
+	c.cfg.Set("logger.level", config.Logger.Level)
 	c.cfg.Set("cache_dir", config.CacheDir)
 
 	if err := c.cfg.WriteConfig(); err != nil {
@@ -106,7 +122,10 @@ func getDefaultConfig() *Config {
 				".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log",
 			},
 		},
-		DebugLevel: DebugLevelInfo,
-		CacheDir:   ".cache",
+		Logger: Logger{
+			Style: "json",
+			Level: DebugLevelInfo,
+		},
+		CacheDir: ".cache",
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -14,15 +16,15 @@ var gitMutex sync.Mutex
 
 // Initialize a Git repository if it doesn't exist
 func InitGitRepo(directory string) error {
-    gitDir := filepath.Join(directory, ".git")
-    if _, err := os.Stat(gitDir); os.IsNotExist(err) {
-        cmd := exec.Command("git", "init")
-        cmd.Dir = directory
-        if err := cmd.Run(); err != nil {
-            return fmt.Errorf("failed to initialize git repository: %w", err)
-        }
-    }
-    return nil
+	gitDir := filepath.Join(directory, ".git")
+	if _, err := os.Stat(gitDir); os.IsNotExist(err) {
+		cmd := exec.Command("git", "init")
+		cmd.Dir = directory
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to initialize git repository: %w", err)
+		}
+	}
+	return nil
 }
 
 func IsGitRepo(dir string) bool {
@@ -242,6 +244,112 @@ func GitCheckoutFile(path string) error {
 
 		return fmt.Errorf("error checking out file %s | err: %v, output: %s", path, err, string(res))
 	}
+
+	return nil
+}
+
+func GetCommitHistory() ([]string, error) {
+	gitMutex.Lock()
+	defer gitMutex.Unlock()
+
+	res, err := exec.Command("git", "rev-list", "--all").CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("error getting commit history | err: %v, output: %s", err, string(res))
+	}
+
+	return strings.Split(strings.TrimSpace(string(res)), "\n"), nil
+}
+
+func getTargetCommit(commits []string, steps int) (string, error) {
+	if steps >= len(commits) && steps <= 0 && steps > 999 {
+		return "", fmt.Errorf("invalid steps: exceeds number of available commits")
+	}
+
+	return commits[steps], nil
+}
+
+func rewindToCommit(targetSha string) error {
+	gitMutex.Lock()
+	defer gitMutex.Unlock()
+
+	// Check if the provided sha exists in the logs
+	commits, err := GetCommitHistory()
+	if err != nil {
+		return fmt.Errorf("error getting commit history: %v", err)
+	}
+
+	found := false
+
+	for _, logSha := range commits {
+		if logSha == targetSha {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("invalid sha: commit not found")
+	}
+
+	// Rewind to the specified Sha
+	err = GitCheckoutFile(targetSha)
+	if err != nil {
+		return fmt.Errorf("error checking out file %s: %v", targetSha, err)
+	}
+
+	return nil
+}
+
+func isSHA(input string) bool {
+	matched, _ := regexp.MatchString("^[a-f0-9]{40}$", input)
+	return matched
+}
+
+func GitRewind(targetSha string) error {
+	gitMutex.Lock()
+	defer gitMutex.Unlock()
+
+	if targetSha == "" {
+		return fmt.Errorf("no target commit specified")
+	}
+
+	commits, err := GetCommitHistory()
+	if err != nil {
+		return fmt.Errorf("error getting commit history: %v", err)
+	}
+
+	var targetCommit string
+	var msg string
+
+	if isSHA(targetSha) {
+		targetCommit = targetSha
+		msg = "✅ Rewound to " + targetSha
+	} else {
+		numSteps, err := strconv.Atoi(targetSha)
+		if err != nil {
+			return fmt.Errorf("invalid target commit: %s", targetSha)
+		}
+
+		targetCommit, err = getTargetCommit(commits, numSteps)
+		if err != nil {
+			return fmt.Errorf("error getting target commit: %v", err)
+		}
+
+		postfix := "s"
+		if numSteps == 1 {
+			postfix = ""
+		}
+
+		msg = fmt.Sprintf("✅ Rewound %d step%s to %s", numSteps, postfix, targetSha)
+	}
+
+	err = rewindToCommit(targetCommit)
+	if err != nil {
+		return fmt.Errorf("error rewinding to %s: %v", targetCommit, err)
+	}
+
+	fmt.Println(msg)
+	fmt.Println()
 
 	return nil
 }

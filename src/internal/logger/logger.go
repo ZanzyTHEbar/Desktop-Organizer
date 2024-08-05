@@ -1,7 +1,7 @@
-package DesktopCleanerlogger
+package logger
 
 import (
-	"DesktopCleaner/internal/config"
+	deskFS "desktop-cleaner/internal/fs"
 	"log/slog"
 	"os"
 
@@ -17,11 +17,11 @@ var loggerLevels = map[string]slog.Level{
 
 // Set up the logger based on the configuration
 // Must be called before server is started
-func InitLogger(config config.Config) {
+func InitLogger(config *deskFS.Config) {
 
 	var handler slog.Handler
 
-	logLevel, ok := loggerLevels[config.Logger.Level]
+	logLevel, ok := loggerLevels[string(config.Logger.Level)]
 
 	if !ok {
 		log.Debugf("Invalid log level: %s, Using default value INFO", config.Logger.Level)

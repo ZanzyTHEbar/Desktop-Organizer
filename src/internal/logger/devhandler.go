@@ -1,4 +1,4 @@
-package DesktopCleanerlogger
+package logger
 
 import (
 	"context"

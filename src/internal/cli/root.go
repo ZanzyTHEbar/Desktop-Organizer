@@ -19,10 +19,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package main
+package cli
 
-import "desktop-cleaner/cmd"
+import (
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
 
-func main() {
-	cmd.Execute()
+var cfgFile string
+
+type RootCMD struct {
+	Root *cobra.Command
+}
+
+func NewRootCMD(params *CmdParams) *RootCMD {
+	return &RootCMD{
+		Root: NewRoot(params),
+	}
+}
+
+func NewRoot(params *CmdParams) *cobra.Command {
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd := &cobra.Command{
+		Use:   "desktop-cleaner [command] [flags]",
+		Short: "DesktopCleaner is a tool to automate the clean up a specified directory",
+	}
+
+	for _, cmd := range params.Palette {
+		rootCmd.AddCommand(cmd)
+	}
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.desktop-cleaner/.desktop-cleaner.ini)")
+
+	//cobra.OnInitialize(initConfig)
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	if cfgFile != "" {
+		// Use config file from the flag.
+		params.DeskFS.InitConfig(&cfgFile)
+	} else {
+		params.DeskFS.InitConfig(nil)
+	}
+
+	return rootCmd
 }

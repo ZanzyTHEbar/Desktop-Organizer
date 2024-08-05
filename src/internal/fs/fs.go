@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"desktop-cleaner/internal/terminal"
 	"errors"
 	"fmt"
 	"io"
@@ -13,17 +14,6 @@ import (
 
 	ignore "github.com/sabhiram/go-gitignore"
 )
-
-var Cwd string
-var CacheDir string
-
-var ConfigFile string
-var HomeDir string
-var HomeDCDir string
-
-var ProjectRoot string
-
-var InstanceConfig *Config
 
 type CleanerPaths struct {
 	ActivePaths           map[string]bool
@@ -41,9 +31,20 @@ type FilePathParams struct {
 	GitEnabled      bool
 }
 
-func init() {
+type DesktopFS struct {
+	HomeDir        string
+	Cwd            string
+	CacheDir       string
+	HomeDCDir      string
+	ProjectRoot    string
+	InstanceConfig *Config
+	term           *terminal.Terminal
+}
+
+func NewDesktopFS(term *terminal.Terminal) *DesktopFS {
 	var err error
-	Cwd, err = os.Getwd()
+	cwd, err := os.Getwd()
+
 	if err != nil {
 		term.OutputErrorAndExit("Error getting current working directory: %v", err)
 	}
@@ -53,76 +54,91 @@ func init() {
 		term.OutputErrorAndExit("Couldn't find home directory: %v", err)
 	}
 
-	HomeDir = home
+	var homeDCDir string
+	var cacheDir string
+	var projectRoot string
 
 	if os.Getenv("DESKTOP_CLEANER_ENV") == "development" {
-		HomeDCDir = filepath.Join(home, ".desktop-cleaner-dev")
+		homeDCDir = filepath.Join(home, ".desktop-cleaner-dev")
 	} else {
-		HomeDCDir = filepath.Join(home, ".desktop-cleaner")
+		homeDCDir = filepath.Join(home, ".desktop-cleaner")
 	}
 
-	err = os.MkdirAll(HomeDCDir, os.ModePerm)
+	err = os.MkdirAll(homeDCDir, os.ModePerm)
 	if err != nil {
 		term.OutputErrorAndExit("Error creating config directory: %v", err.Error())
 	}
 
-	CacheDir = filepath.Join(HomeDCDir, "cache")
+	cacheDir = filepath.Join(homeDCDir, "cache")
 
-	HomeDCDir = findDesktopCleaner(Cwd)
-	if HomeDCDir != "" {
-		ProjectRoot = Cwd
+	homeDCDir = findDesktopCleaner(cwd)
+	if homeDCDir != "" {
+		projectRoot = cwd
 	}
 
-	// Load the configuration file
-	InstanceConfig, err = NewConfig()
-	if err != nil {
-		term.OutputErrorAndExit("Error loading configuration: %v", err)
+	return &DesktopFS{
+		HomeDir:     home,
+		Cwd:         cwd,
+		CacheDir:    cacheDir,
+		HomeDCDir:   homeDCDir,
+		ProjectRoot: projectRoot,
+		term:        term,
 	}
 }
 
-func FindOrCreateDesktopCleaner() (string, bool, error) {
-	HomeDCDir = findDesktopCleaner(Cwd)
-	if HomeDCDir != "" {
-		ProjectRoot = Cwd
-		return HomeDCDir, false, nil
+func (dfs *DesktopFS) InitConfig(path *string) {
+	// Load the configuration file
+	config, err := NewConfig(path)
+	if err != nil {
+		dfs.term.OutputErrorAndExit("Error loading configuration: %v", err)
+	}
+
+	dfs.InstanceConfig = config
+}
+
+func (dfs *DesktopFS) FindOrCreateDesktopCleaner() (string, bool, error) {
+	dfs.HomeDCDir = findDesktopCleaner(dfs.Cwd)
+	if dfs.HomeDCDir != "" {
+		dfs.ProjectRoot = dfs.Cwd
+		return dfs.HomeDCDir, false, nil
 	}
 
 	// Determine the directory path
 	var dir string
 	if os.Getenv("DESKTOP_CLEANER_ENV") == "development" {
-		dir = filepath.Join(Cwd, ".desktop-cleaner-dev")
+		dir = filepath.Join(dfs.Cwd, ".desktop-cleaner-dev")
 	} else {
-		dir = filepath.Join(Cwd, ".desktop-cleaner")
+		dir = filepath.Join(dfs.Cwd, ".desktop-cleaner")
 	}
 
 	err := os.Mkdir(dir, os.ModePerm)
 	if err != nil {
 		return "", false, err
 	}
-	HomeDCDir = dir
-	ProjectRoot = Cwd
+	dfs.HomeDCDir = dir
+	dfs.ProjectRoot = dfs.Cwd
 
 	return dir, true, nil
 }
 
-func ProjectRootIsGitRepo() bool {
-	if ProjectRoot == "" {
+func (dfs *DesktopFS) ProjectRootIsGitRepo() bool {
+	if dfs.ProjectRoot == "" {
 		return false
 	}
 
-	return IsGitRepo(ProjectRoot)
+	return IsGitRepo(dfs.ProjectRoot)
 }
 
-func GetCleanerPaths(baseDir string) (*CleanerPaths, error) {
-	if ProjectRoot == "" {
+func (dfs *DesktopFS) GetCleanerPaths(baseDir string) (*CleanerPaths, error) {
+	if dfs.ProjectRoot == "" {
 		return nil, fmt.Errorf("no project root found")
 	}
 
-	return GetPaths(baseDir, ProjectRoot)
+	return dfs.GetPaths(baseDir, dfs.ProjectRoot)
 }
 
-func GetPaths(baseDir, currentDir string) (*CleanerPaths, error) {
-	ignored, err := GetDesktopCleanerIgnore(currentDir)
+func (dfs *DesktopFS) GetPaths(baseDir, currentDir string) (*CleanerPaths, error) {
+	ignored, err := dfs.GetDesktopCleanerIgnore(currentDir)
 
 	if err != nil {
 		return nil, err
@@ -368,7 +384,7 @@ func GetPaths(baseDir, currentDir string) (*CleanerPaths, error) {
 	}, nil
 }
 
-func GetDesktopCleanerIgnore(dir string) (*ignore.GitIgnore, error) {
+func (dfs *DesktopFS) GetDesktopCleanerIgnore(dir string) (*ignore.GitIgnore, error) {
 	ignorePath := filepath.Join(dir, ".desktop-cleaner-ignore")
 
 	if _, err := os.Stat(ignorePath); err == nil {
@@ -386,12 +402,12 @@ func GetDesktopCleanerIgnore(dir string) (*ignore.GitIgnore, error) {
 	return nil, nil
 }
 
-func GetBaseDirForFilePaths(paths []string) string {
-	baseDir := ProjectRoot
+func (dfs *DesktopFS) GetBaseDirForFilePaths(paths []string) string {
+	baseDir := dfs.ProjectRoot
 	dirsUp := 0
 
 	for _, path := range paths {
-		currentDir := ProjectRoot
+		currentDir := dfs.ProjectRoot
 
 		pathSplit := strings.Split(path, string(os.PathSeparator))
 
@@ -415,7 +431,7 @@ func GetBaseDirForFilePaths(paths []string) string {
 }
 
 // Copy a file from src to dst
-func CopyFile(src, dst string) error {
+func (dfs *DesktopFS) CopyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -435,7 +451,7 @@ func CopyFile(src, dst string) error {
 }
 
 // Copy a directory and its contents recursively with concurrency
-func CopyDir(srcDir, dstDir string, remove bool) error {
+func (dfs *DesktopFS) CopyDir(srcDir, dstDir string, remove bool) error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	errCh := make(chan error, 1)
@@ -466,14 +482,14 @@ func CopyDir(srcDir, dstDir string, remove bool) error {
 			}
 
 			if fileInfo.IsDir() {
-				if err := CopyDir(srcPath, dstPath, remove); err != nil {
+				if err := dfs.CopyDir(srcPath, dstPath, remove); err != nil {
 					mu.Lock()
 					errCh <- err
 					mu.Unlock()
 					return
 				}
 			} else {
-				if err := CopyFile(srcPath, dstPath); err != nil {
+				if err := dfs.CopyFile(srcPath, dstPath); err != nil {
 					mu.Lock()
 					errCh <- err
 					mu.Unlock()
@@ -509,7 +525,7 @@ func CopyDir(srcDir, dstDir string, remove bool) error {
 }
 
 // Copy files and directories with support for recursion and remove flag
-func Copy(src, dst string, recursive, remove bool) error {
+func (dfs *DesktopFS) Copy(src, dst string, recursive, remove bool) error {
 	srcInfo, err := os.Stat(src)
 	if err != nil {
 		return err
@@ -519,9 +535,9 @@ func Copy(src, dst string, recursive, remove bool) error {
 		if !recursive {
 			return fmt.Errorf("source is a directory, use recursive flag to copy directories")
 		}
-		return CopyDir(src, dst, remove)
+		return dfs.CopyDir(src, dst, remove)
 	}
-	if err := CopyFile(src, dst); err != nil {
+	if err := dfs.CopyFile(src, dst); err != nil {
 		return err
 	}
 	if remove {
@@ -531,19 +547,19 @@ func Copy(src, dst string, recursive, remove bool) error {
 }
 
 // Function to move files to trash
-func MoveToTrash(path string) error {
+func (dfs *DesktopFS) MoveToTrash(path string) error {
 	// Implementation of moving files to trash
 	return nil
 }
 
 // Move or copy files based on the configuration
-func EnhancedOrganize(directory string, cfg Config, params *FilePathParams) error {
+func (dfs *DesktopFS) EnhancedOrganize(directory string, cfg Config, params *FilePathParams) error {
 	targetDir := directory
 	if cfg.TargetDir != "" {
 		targetDir = cfg.TargetDir
 	}
 
-	if params.GitEnabled && ProjectRootIsGitRepo() {
+	if params.GitEnabled && dfs.ProjectRootIsGitRepo() {
 		if err := InitGitRepo(targetDir); err != nil {
 			return err
 		}
@@ -553,7 +569,7 @@ func EnhancedOrganize(directory string, cfg Config, params *FilePathParams) erro
 	var err error
 
 	if params.GitEnabled {
-		cleanerPaths, err := GetPaths(directory, directory)
+		cleanerPaths, err := dfs.GetPaths(directory, directory)
 		if err != nil {
 			return err
 		}
@@ -561,7 +577,7 @@ func EnhancedOrganize(directory string, cfg Config, params *FilePathParams) erro
 			paths = append(paths, filepath.Join(directory, path))
 		}
 	} else {
-		paths, err = ParseInputPaths([]string{directory}, &FilePathParams{Recursive: params.Recursive, NamesOnly: params.NamesOnly})
+		paths, err = dfs.ParseInputPaths([]string{directory}, &FilePathParams{Recursive: params.Recursive, NamesOnly: params.NamesOnly})
 		if err != nil {
 			return err
 		}
@@ -619,7 +635,7 @@ func EnhancedOrganize(directory string, cfg Config, params *FilePathParams) erro
 		wg.Add(1)
 		go func(srcPath, dstPath string) {
 			defer wg.Done()
-			if err := Copy(srcPath, dstPath, params.Recursive, params.RemoveAfter); err != nil {
+			if err := dfs.Copy(srcPath, dstPath, params.Recursive, params.RemoveAfter); err != nil {
 				errCh <- err
 				return
 			}
@@ -635,7 +651,7 @@ func EnhancedOrganize(directory string, cfg Config, params *FilePathParams) erro
 		return fmt.Errorf("failed to organize files: %w", err)
 	}
 
-	if params.GitEnabled && ProjectRootIsGitRepo() {
+	if params.GitEnabled && dfs.ProjectRootIsGitRepo() {
 		if err := GitAddAndCommit(targetDir, "Organized files", true); err != nil {
 			return err
 		}
@@ -645,7 +661,7 @@ func EnhancedOrganize(directory string, cfg Config, params *FilePathParams) erro
 }
 
 // Parse Paths WITHOUT git support
-func ParseInputPaths(fileOrDirPaths []string, params *FilePathParams) ([]string, error) {
+func (dfs *DesktopFS) ParseInputPaths(fileOrDirPaths []string, params *FilePathParams) ([]string, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var firstErr error
