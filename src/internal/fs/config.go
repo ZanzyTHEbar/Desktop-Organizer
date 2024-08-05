@@ -3,6 +3,7 @@ package fs
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -20,17 +21,17 @@ const (
 )
 
 type Logger struct {
-	Style string
-	Level DebugLevelType
+	Style string         `mapstructure:"style"`
+	Level DebugLevelType `mapstructure:"level"`
 }
 
 // Config holds the mapping of file types to extensions
 type Config struct {
 	FileTypes  map[string][]string `mapstructure:"file_types"`
-	TargetDir  string              `mapstructure:"target_dir"`
 	NestedDirs map[string][]string `mapstructure:"nested_dirs"`
+	TargetDir  string              `mapstructure:"target_dir"`
 	CacheDir   string              `mapstructure:"cache_dir"`
-	Logger     Logger
+	Logger     Logger              `mapstructure:"logger"`
 	cfg        *viper.Viper
 }
 
@@ -38,6 +39,7 @@ func NewConfig(path *string) (*Config, error) {
 	cfg := viper.New()
 
 	cfg.SetConfigName(".desktop_cleaner") // name of config file (without extension)
+	cfg.SetConfigType("toml")              // REQUIRED if the config file does not have the extension in the name
 
 	if path != nil {
 		cfg.SetConfigFile(*path)
@@ -47,47 +49,63 @@ func NewConfig(path *string) (*Config, error) {
 		cfg.AddConfigPath(".")
 	}
 
-	logger := Logger{
-		Style: "json",
-		Level: DebugLevelInfo,
-	}
-
-	config := Config{
-		FileTypes:  make(map[string][]string),
-		TargetDir:  "",
-		NestedDirs: make(map[string][]string),
-		Logger:     logger,
-		cfg:        cfg,
-	}
+	var defaultConfig Config
 
 	if err := cfg.ReadInConfig(); err != nil {
 		// Create a default config file if it doesn't exist
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 
 			// set the default config file location
-			cfg.SetConfigFile(filepath.Join("$HOME/.config/desktop_cleaner"))
 
-			slog.Warn(fmt.Sprintf("Config file not found. Creating a default config file at %s", cfg.ConfigFileUsed()))
+			defaultConfigPath := filepath.Join(os.Getenv("HOME"), ".config", "desktop_cleaner", ".desktop_cleaner.toml")
 
-			config = *getDefaultConfig()
+			cfg.SetConfigFile(defaultConfigPath)
+
+			slog.Warn(fmt.Sprintf("Config file not found. Creating a default config file at %+v\n", cfg.ConfigFileUsed()))
+
+			defaultConfig = getDefaultConfig()
+
+			// log the default config
+			slog.Debug(fmt.Sprintf("Default Config: %v", defaultConfig))
+
+			cfg.Set("file_types", defaultConfig.FileTypes)
+			cfg.Set("nested_dirs", defaultConfig.NestedDirs)
+			cfg.Set("cache_dir", defaultConfig.CacheDir)
+			cfg.Set("logger", defaultConfig.Logger)
+
+			// print the contents of viper
+			slog.Warn(fmt.Sprintf("Viper: %v", cfg.AllSettings()))
 
 			// Set the cache directory to the same directory as the config file
-			config.CacheDir = filepath.Join(filepath.Dir(cfg.ConfigFileUsed()), config.CacheDir)
+			defaultConfig.CacheDir = filepath.Join(filepath.Dir(cfg.ConfigFileUsed()), defaultConfig.CacheDir)
 
-			if err := cfg.WriteConfig(); err != nil {
-				return nil, err
+			// Create the directory if it doesn't exist
+			if _, err := os.Stat(filepath.Dir(defaultConfig.CacheDir)); os.IsNotExist(err) {
+				if err := os.MkdirAll(filepath.Dir(defaultConfig.CacheDir), 0755); err != nil {
+					slog.Error(fmt.Sprintf("Error creating cache directory at %s", defaultConfig.CacheDir))
+					return nil, err
+				}
 			}
+
+			// marshal the default config to viper
+
+
+			if err := cfg.WriteConfigAs(defaultConfigPath); err != nil {
+				slog.Error(fmt.Sprintf("Error creating default config file at %s", defaultConfigPath))
+				return nil, err
+			} else {
+				slog.Info(fmt.Sprintf("Default config file created at %s", defaultConfigPath))
+			}
+		} else {
 			return nil, err
 		}
+	}
 
+	if err := cfg.Unmarshal(&defaultConfig); err != nil {
 		return nil, err
 	}
 
-	if err := cfg.Unmarshal(&config); err != nil {
-		return nil, err
-	}
-
-	return &config, nil
+	return &defaultConfig, nil
 }
 
 func (c *Config) SaveConfig(config *Config, filePath string) error {
@@ -106,8 +124,8 @@ func (c *Config) SaveConfig(config *Config, filePath string) error {
 }
 
 // Returns the default configuration
-func getDefaultConfig() *Config {
-	return &Config{
+func getDefaultConfig() Config {
+	return Config{
 		FileTypes: map[string][]string{
 			"Notes":      {".md", ".rtf", ".txt"},
 			"Docs":       {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"},
