@@ -12,8 +12,6 @@ type OrganizeCMD struct {
 	Organize *cobra.Command
 }
 
-var srcDir string
-var targetDir string
 var fileParams deskfs.FilePathParams
 
 func NewOrganize(params *cli.CmdParams) *cobra.Command {
@@ -37,33 +35,33 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 	organizeCmd.Flags().IntVarP(&fileParams.MaxDepth, "max-depth", "x", -1, "Maximum depth for recursion")
 	organizeCmd.Flags().BoolVarP(&fileParams.GitEnabled, "git-enabled", "g", false, "Enable Git operations")
 	organizeCmd.Flags().BoolVarP(&fileParams.CopyFiles, "copy", "c", false, "Enable move as Copy operation, required when moving files across partitions. If not enabled, will default to copy when move is not possible.")
-	organizeCmd.Flags().StringVarP(&srcDir, "srcDir", "d", "", "Destination directory to organize files from")
-	organizeCmd.Flags().StringVarP(&targetDir, "target", "t", "", "Target directory to organize files into")
+	organizeCmd.Flags().StringVarP(&fileParams.SourceDir, "srcDir", "d", "", "Destination directory to organize files from")
+	organizeCmd.Flags().StringVarP(&fileParams.TargetDir, "target", "t", "", "Target directory to organize files into")
 
 	return organizeCmd
 }
 
 func organizeFiles(params *cli.CmdParams) error {
 	// Set default directories if not provided
-	if srcDir == "" {
+	if fileParams.SourceDir == "" {
 		var err error
-		srcDir, err = os.Getwd()
+		fileParams.SourceDir, err = os.Getwd()
 		if err != nil {
 			params.Term.OutputErrorAndExit("Error getting current working directory: %v", err)
 		}
 	}
 
-	if targetDir == "" {
-		targetDir = srcDir
+	if fileParams.TargetDir == "" {
+		fileParams.TargetDir = fileParams.SourceDir
 	}
 
 	params.Term.ToggleSpinner(true, "Organizing files...")
 
 	// Initialize Git if Git is enabled and repository is not already initialized
 	if fileParams.GitEnabled {
-		if !params.DeskFS.IsGitRepo(srcDir) {
+		if !params.DeskFS.IsGitRepo(fileParams.SourceDir) {
 			params.Term.OutputInfo("Git operations enabled, but no Git repository detected. Initializing Git repository.")
-			if err := params.DeskFS.InitGitRepo(srcDir); err != nil {
+			if err := params.DeskFS.InitGitRepo(fileParams.SourceDir); err != nil {
 				params.Term.OutputErrorAndExit("Error initializing Git repository: %v", err)
 			}
 		} else {
