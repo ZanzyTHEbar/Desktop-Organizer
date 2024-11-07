@@ -15,13 +15,6 @@ import (
 	ignore "github.com/sabhiram/go-gitignore"
 )
 
-type CleanerPaths struct {
-	ActivePaths           map[string]bool
-	AllPaths              map[string]bool
-	DesktopCleanerIgnored *ignore.GitIgnore
-	IgnoredPaths          map[string]string
-}
-
 type FilePathParams struct {
 	RemoveAfter     bool
 	NamesOnly       bool
