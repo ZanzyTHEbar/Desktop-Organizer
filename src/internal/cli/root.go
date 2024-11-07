@@ -28,7 +28,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var cfgFile *string
 
 type RootCMD struct {
 	Root *cobra.Command
@@ -52,16 +52,11 @@ func NewRoot(params *CmdParams) *cobra.Command {
 		rootCmd.AddCommand(cmd)
 	}
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/.desktop_cleaner/.desktop_cleaner.toml)")
+	rootCmd.PersistentFlags().StringVar(cfgFile, "config", "", "config file (default is $HOME/.config/.desktop_cleaner/.desktop_cleaner.toml)")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	if cfgFile != "" {
-		// Use config file from the flag.
-		params.DeskFS.InitConfig(&cfgFile)
-	} else {
-		params.DeskFS.InitConfig(nil)
-	}
+	params.DeskFS.InitConfig(cfgFile)
 
 	logger.InitLogger(params.DeskFS.InstanceConfig)
 

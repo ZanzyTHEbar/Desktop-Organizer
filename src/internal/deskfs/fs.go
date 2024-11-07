@@ -61,13 +61,14 @@ func NewDesktopFS(term *terminal.Terminal) *DesktopFS {
 	}
 }
 
-func (dfs *DesktopFS) InitConfig(path *string) {
-	// Load the configuration file
-	config, err := NewConfig(path)
+func (dfs *DesktopFS) InitConfig(optionalConfigPath *string) {
+	// Call NewConfig with the provided path (can be nil if no path is specified)
+	config, err := NewConfig(optionalConfigPath)
 	if err != nil {
 		dfs.term.OutputErrorAndExit("Error loading configuration: %v", err)
 	}
 
+	// Set the loaded configuration for this instance
 	dfs.InstanceConfig = config
 }
 

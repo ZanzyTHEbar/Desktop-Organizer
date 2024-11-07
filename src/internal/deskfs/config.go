@@ -35,17 +35,24 @@ type Config struct {
 	cfg        *viper.Viper
 }
 
-func NewConfig(path *string) (*Config, error) {
+func NewConfig(optionalPath *string) (*Config, error) {
 	cfg := viper.New()
 
-	cfg.SetConfigName(".desktop_cleaner") // name of config file (without extension)
-	cfg.SetConfigType("toml")              // REQUIRED if the config file does not have the extension in the name
+	cfg.SetConfigType("toml") // REQUIRED if the config file does not have the extension in the name
 
-	if path != nil {
-		cfg.SetConfigFile(*path)
+	// Step 1: First, try to load config from CWD
+	cwdConfigPath := ".desktop_cleaner.toml"
+	if _, err := os.Stat(cwdConfigPath); err == nil {
+		cfg.SetConfigFile(cwdConfigPath)
+	} else if optionalPath != nil {
+		// Step 2: If CWD config is not found, check the provided path
+		cfg.SetConfigFile(*optionalPath)
 	} else {
-		cfg.AddConfigPath("/etc/desktop_cleaner")          // look for config in the home directory
+		// Step 3: If no path is provided, look for the config in the default locations
+		cfg.SetConfigName(".desktop_cleaner") // name of config file (without extension)
+		//cfg.AddConfigPath("/etc/desktop_cleaner")          // look for config in the home directory
 		cfg.AddConfigPath("$HOME/.config/desktop_cleaner") // look for config in the home directory
+		// Look for config in current directory first
 		cfg.AddConfigPath(".")
 	}
 
@@ -88,7 +95,6 @@ func NewConfig(path *string) (*Config, error) {
 			}
 
 			// marshal the default config to viper
-
 
 			if err := cfg.WriteConfigAs(defaultConfigPath); err != nil {
 				slog.Error(fmt.Sprintf("Error creating default config file at %s", defaultConfigPath))
