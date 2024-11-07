@@ -173,17 +173,16 @@ func (dfs *DesktopFS) MoveToTrash(path string) error {
 
 // buildTreeAndCache recursively builds a directory tree and populates a cache
 func (dfs *DesktopFS) buildTreeAndCache(rootPath string, recursive bool) error {
-	tree, err := NewDirectoryTree(rootPath)
-	if err != nil {
-		return fmt.Errorf("failed to build directory tree: %w", err)
+	// Ensure DirectoryTree and Cache are initialized
+	if dfs.DirectoryTree == nil {
+		dfs.DirectoryTree = &DirectoryTree{Root: NewTreeNode(rootPath, Directory, nil)}
+	}
+	if dfs.DirectoryTree.Cache == nil {
+		dfs.DirectoryTree.Cache = make(map[string]*TreeNode)
 	}
 
-	err = dfs.buildTreeNodes(tree.Root, recursive)
-	if err != nil {
-		return fmt.Errorf("failed to build directory tree: %w", err)
-	}
-	dfs.DirectoryTree = tree
-	return nil
+	// Populate the tree starting from the root node
+	return dfs.buildTreeNodes(dfs.DirectoryTree.Root, recursive)
 }
 
 // Recursive helper to populate the directory tree with TreeNode entries
@@ -290,9 +289,17 @@ func (dfs *DesktopFS) traverseAndOrganize(node *TreeNode, cfg *DeskFSConfig, par
 					return // Skip files without a target folder
 				}
 
-				destDir := filepath.Join(cfg.TargetDir, targetFolder)
-				destPath := filepath.Join(destDir, fileNode.Name)
+				// Construct destDir with params.TargetDir as the root
+				destDir := filepath.Join(params.TargetDir, targetFolder)
+				destPath := filepath.Join(destDir, filepath.Base(fileNode.Name))
 
+				// Log paths to check values
+				fmt.Printf("Source: %s\nTarget Dir: %s\nDestination Path: %s\n", fileNode.Name, destDir, destPath)
+
+				// Ensure the target directory exists before moving or copying files
+				if err := os.MkdirAll(filepath.Dir(destPath), os.ModePerm); err != nil {
+					errCh <- fmt.Errorf("failed to create target directory %s: %w", filepath.Dir(destPath), err)
+				}
 				// Ensure the target directory exists
 				if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
 					errCh <- fmt.Errorf("failed to create target directory: %w", err)
@@ -321,6 +328,10 @@ func (dfs *DesktopFS) determineTargetFolder(fileNode *TreeNode, cfg *DeskFSConfi
 	for folder, extensions := range cfg.FileTypes {
 		for _, allowedExt := range extensions {
 			if ext == allowedExt {
+				// Include nested directory structure if specified
+				if nestedDirs, exists := cfg.NestedDirs[folder]; exists {
+					return filepath.Join(folder, filepath.Join(nestedDirs...)), true
+				}
 				return folder, true
 			}
 		}

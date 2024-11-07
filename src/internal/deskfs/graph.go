@@ -35,6 +35,36 @@ type DirectoryTree struct {
 	sync.Mutex
 }
 
+func NewTreeNode(name string, nodeType NodeType, metadata *FileMetadata) *TreeNode {
+	return &TreeNode{
+		Name:     name,
+		Type:     nodeType,
+		Metadata: metadata,
+		Children: make([]*TreeNode, 0),
+		Parent:   nil,
+	}
+}
+
+func (n *TreeNode) String() string {
+	return n.Name
+}
+
+func (n *TreeNode) IsRoot() bool {
+	return n.Parent == nil
+}
+
+func (n *TreeNode) IsLeaf() bool {
+	return len(n.Children) == 0
+}
+
+func (n *TreeNode) IsFile() bool {
+	return n.Type == File
+}
+
+func (n *TreeNode) IsDir() bool {
+	return n.Type == Directory
+}
+
 func NewDirectoryTree(rootPath string) (*DirectoryTree, error) {
 	if rootPath == "" {
 		return nil, fmt.Errorf("root path cannot be empty")
