@@ -1,15 +1,16 @@
 package terminal
 
 import (
-	"desktop-cleaner/internal/utils"
 	"fmt"
 	"os"
 	"strings"
+
+	gobasetools "github.com/ZanzyTHEbar/go-basetools"
 )
 
 func (t *Terminal) OutputSimpleError(msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
-	fmt.Fprintln(os.Stderr, ColorHiGreen.Bold(true).Render("🚨 "+utils.Capitalize(msg)))
+	fmt.Fprintln(os.Stderr, ColorHiGreen.Bold(true).Render("🚨 "+gobasetools.Capitalize(msg)))
 }
 
 func (t *Terminal) OutputErrorAndExit(msg string, args ...interface{}) {
@@ -50,7 +51,7 @@ func (t *Terminal) OutputErrorAndExit(msg string, args ...interface{}) {
 				displayMsg += "→ "
 			}
 
-			s := utils.Capitalize(part)
+			s := gobasetools.Capitalize(part)
 			if i == 0 {
 				s = ColorHiRed.Bold(true).Render("🚨 " + s)
 			}
@@ -77,21 +78,21 @@ func (t *Terminal) OutputUnformattedErrorAndExit(msg string) {
 
 func (t *Terminal) OutputInfo(msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
-	fmt.Fprintln(os.Stdout, ColorHiBlue.Render("🔵 "+utils.Capitalize(msg)))
+	fmt.Fprintln(os.Stdout, ColorHiBlue.Render("🔵 "+gobasetools.Capitalize(msg)))
 }
 
 func (t *Terminal) OutputSuccess(msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
-	fmt.Fprintln(os.Stdout, ColorHiGreen.Render("✅ "+utils.Capitalize(msg)))
+	fmt.Fprintln(os.Stdout, ColorHiGreen.Render("✅ "+gobasetools.Capitalize(msg)))
 }
 
 func (t *Terminal) OutputWarning(msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
-	fmt.Fprintln(os.Stdout, ColorHiYellow.Render("⚠️ "+utils.Capitalize(msg)))
+	fmt.Fprintln(os.Stdout, ColorHiYellow.Render("⚠️ "+gobasetools.Capitalize(msg)))
 }
 
 func (t *Terminal) ConfirmYesNo(msg string) bool {
-	fmt.Print(ColorHiBlue.Render("🔵 " + utils.Capitalize(msg) + " (y/n): "))
+	fmt.Print(ColorHiBlue.Render("🔵 " + gobasetools.Capitalize(msg) + " (y/n): "))
 	var response string
 	fmt.Scanln(&response)
 	response = strings.ToLower(response)

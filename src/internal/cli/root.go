@@ -22,8 +22,7 @@ THE SOFTWARE.
 package cli
 
 import (
-	"desktop-cleaner/internal/logger"
-
+	"github.com/ZanzyTHEbar/go-basetools/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -58,7 +57,7 @@ func NewRoot(params *CmdParams) *cobra.Command {
 
 	params.DeskFS.InitConfig(cfgFile)
 
-	logger.InitLogger(params.DeskFS.InstanceConfig)
+	logger.InitLogger(&params.DeskFS.InstanceConfig.Config)
 
 	return rootCmd
 }

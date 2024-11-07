@@ -6,36 +6,20 @@ import (
 	"os"
 	"path/filepath"
 
+	gobaselogger "github.com/ZanzyTHEbar/go-basetools/logger"
 	"github.com/spf13/viper"
 )
 
-type DebugLevelType string
-
-const (
-	DebugLevelInfo  DebugLevelType = "info"
-	DebugLevelDebug DebugLevelType = "debug"
-	DebugLevelWarn  DebugLevelType = "warn"
-	DebugLevelError DebugLevelType = "error"
-	DebugLevelTrace DebugLevelType = "trace"
-	DebugLevelOff   DebugLevelType = "off"
-)
-
-type Logger struct {
-	Style string         `mapstructure:"style"`
-	Level DebugLevelType `mapstructure:"level"`
-}
-
 // Config holds the mapping of file types to extensions
-type Config struct {
+type DeskFSConfig struct {
+	gobaselogger.Config
 	FileTypes  map[string][]string `mapstructure:"file_types"`
 	NestedDirs map[string][]string `mapstructure:"nested_dirs"`
 	TargetDir  string              `mapstructure:"target_dir"`
 	CacheDir   string              `mapstructure:"cache_dir"`
-	Logger     Logger              `mapstructure:"logger"`
-	cfg        *viper.Viper
 }
 
-func NewConfig(optionalPath *string) (*Config, error) {
+func NewConfig(optionalPath *string) (*DeskFSConfig, error) {
 	cfg := viper.New()
 
 	cfg.SetConfigType("toml") // REQUIRED if the config file does not have the extension in the name
@@ -56,7 +40,7 @@ func NewConfig(optionalPath *string) (*Config, error) {
 		cfg.AddConfigPath(".")
 	}
 
-	var defaultConfig Config
+	var defaultConfig DeskFSConfig
 
 	if err := cfg.ReadInConfig(); err != nil {
 		// Create a default config file if it doesn't exist
@@ -114,15 +98,15 @@ func NewConfig(optionalPath *string) (*Config, error) {
 	return &defaultConfig, nil
 }
 
-func (c *Config) SaveConfig(config *Config, filePath string) error {
-	c.cfg.Set("file_types", config.FileTypes)
-	c.cfg.Set("target_dir", config.TargetDir)
-	c.cfg.Set("nested_dirs", config.NestedDirs)
-	c.cfg.Set("logger.style", config.Logger.Style)
-	c.cfg.Set("logger.level", config.Logger.Level)
-	c.cfg.Set("cache_dir", config.CacheDir)
+func (dfc *DeskFSConfig) SaveConfig(config *DeskFSConfig, filePath string) error {
+	dfc.Config.Cfg.Set("file_types", config.FileTypes)
+	dfc.Config.Cfg.Set("target_dir", config.TargetDir)
+	dfc.Config.Cfg.Set("nested_dirs", config.NestedDirs)
+	dfc.Config.Cfg.Set("logger.style", config.Logger.Style)
+	dfc.Config.Cfg.Set("logger.level", config.Logger.Level)
+	dfc.Config.Cfg.Set("cache_dir", config.CacheDir)
 
-	if err := c.cfg.WriteConfig(); err != nil {
+	if err := dfc.Config.Cfg.WriteConfig(); err != nil {
 		return err
 	}
 
@@ -130,8 +114,8 @@ func (c *Config) SaveConfig(config *Config, filePath string) error {
 }
 
 // Returns the default configuration
-func getDefaultConfig() Config {
-	return Config{
+func getDefaultConfig() DeskFSConfig {
+	return DeskFSConfig{
 		FileTypes: map[string][]string{
 			"Notes":      {".md", ".rtf", ".txt"},
 			"Docs":       {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"},
@@ -154,9 +138,12 @@ func getDefaultConfig() Config {
 				".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log",
 			},
 		},
-		Logger: Logger{
-			Style: "json",
-			Level: DebugLevelInfo,
+
+		Config: gobaselogger.Config{
+			Logger: gobaselogger.Logger{
+				Style: "json",
+				Level: gobaselogger.LoggerLevels["info"].String(),
+			},
 		},
 		CacheDir: ".cache",
 	}

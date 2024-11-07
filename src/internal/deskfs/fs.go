@@ -33,7 +33,7 @@ type DesktopFS struct {
 	CacheDir       string
 	HomeDCDir      string
 	DirectoryTree  *DirectoryTree
-	InstanceConfig *Config
+	InstanceConfig *DeskFSConfig
 	term           *terminal.Terminal
 }
 
@@ -225,7 +225,7 @@ func (dfs *DesktopFS) buildTreeNodes(node *TreeNode, recursive bool) error {
 }
 
 // Move or copy files based on the configuration
-func (dfs *DesktopFS) EnhancedOrganize(cfg Config, params *FilePathParams) error {
+func (dfs *DesktopFS) EnhancedOrganize(cfg *DeskFSConfig, params *FilePathParams) error {
 	if params.GitEnabled {
 		// Clear uncommitted changes or stash them based on user input
 		if err := dfs.clearChangesIfNeeded(dfs.Cwd, params); err != nil {
@@ -273,7 +273,7 @@ func (dfs *DesktopFS) EnhancedOrganize(cfg Config, params *FilePathParams) error
 }
 
 // traverseAndOrganize traverses the tree and organizes files based on the configuration
-func (dfs *DesktopFS) traverseAndOrganize(node *TreeNode, cfg Config, params *FilePathParams, wg *sync.WaitGroup, errCh chan error) {
+func (dfs *DesktopFS) traverseAndOrganize(node *TreeNode, cfg *DeskFSConfig, params *FilePathParams, wg *sync.WaitGroup, errCh chan error) {
 	for _, child := range node.Children {
 		if child.Type == Directory {
 			if params.Recursive {
@@ -316,7 +316,7 @@ func (dfs *DesktopFS) traverseAndOrganize(node *TreeNode, cfg Config, params *Fi
 }
 
 // determineTargetFolder identifies the appropriate folder for a file based on its extension
-func (dfs *DesktopFS) determineTargetFolder(fileNode *TreeNode, cfg Config) (string, bool) {
+func (dfs *DesktopFS) determineTargetFolder(fileNode *TreeNode, cfg *DeskFSConfig) (string, bool) {
 	ext := fileNode.Metadata.Extension
 	for folder, extensions := range cfg.FileTypes {
 		for _, allowedExt := range extensions {

@@ -72,7 +72,7 @@ func organizeFiles(params *cli.CmdParams) error {
 	}
 
 	// Execute the organization logic with EnhancedOrganize
-	if err := params.DeskFS.EnhancedOrganize(*params.DeskFS.InstanceConfig, &fileParams); err != nil {
+	if err := params.DeskFS.EnhancedOrganize(params.DeskFS.InstanceConfig, &fileParams); err != nil {
 		params.Term.OutputErrorAndExit("Error organizing files: %v", err)
 	}
 
