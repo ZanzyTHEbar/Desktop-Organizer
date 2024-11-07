@@ -1,12 +1,13 @@
 package terminal
 
 import (
-	errsx "desktop-cleaner/internal/errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/ZanzyTHEbar/errbuilder-go"
 
 	"golang.org/x/term"
 )
@@ -50,7 +51,7 @@ func (t *Terminal) PageOutput(output string, reverse bool) {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
-		errBuilder := errsx.GenericErr(ColorHiRed.Bold(true).Render("Failed to page output"), err)
+		errBuilder := errbuilder.GenericErr(ColorHiRed.Bold(true).Render("Failed to page output"), err)
 		t.OutputErrorAndExit(errBuilder.Error())
 	}
 }
@@ -58,7 +59,7 @@ func (t *Terminal) PageOutput(output string, reverse bool) {
 func (t *Terminal) GetDivisionLine() string {
 	terminalWidth, err := t.getTerminalWidth()
 	if err != nil {
-		errsBuilder := errsx.GenericErr(ColorHiRed.Bold(true).Render("Failed to get terminal width"), err)
+		errsBuilder := errbuilder.GenericErr(ColorHiRed.Bold(true).Render("Failed to get terminal width"), err)
 		slog.Error(errsBuilder.Error())
 		terminalWidth = 50
 	}
