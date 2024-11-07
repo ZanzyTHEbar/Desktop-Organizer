@@ -14,12 +14,6 @@ type UpgradeCMD struct {
 
 var UpgradeShowAll bool
 
-func NewUpgradeCMD(params *cli.CmdParams) *UpgradeCMD {
-	return &UpgradeCMD{
-		Upgrade: NewUpgrade(params),
-	}
-}
-
 func NewUpgrade(params *cli.CmdParams) *cobra.Command {
 	UpgradeCmd := &cobra.Command{
 		Use:     "upgrade ",

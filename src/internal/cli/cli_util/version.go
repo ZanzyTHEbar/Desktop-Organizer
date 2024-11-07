@@ -4,18 +4,13 @@ import (
 	"desktop-cleaner/internal/cli"
 	"desktop-cleaner/version"
 	"fmt"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 )
 
 type VersionCMD struct {
 	Version *cobra.Command
-}
-
-func NewVersionCMD(params *cli.CmdParams) *VersionCMD {
-	return &VersionCMD{
-		Version: NewVersion(params),
-	}
 }
 
 func NewVersion(params *cli.CmdParams) *cobra.Command {
@@ -29,4 +24,12 @@ func NewVersion(params *cli.CmdParams) *cobra.Command {
 	}
 
 	return versionCmd
+}
+
+func isCommandAvailable(name string) bool {
+	cmd := exec.Command(name, "--version")
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+	return true
 }

@@ -12,12 +12,6 @@ type HelpCMD struct {
 
 var helpShowAll bool
 
-func NewHelpCMD(params *cli.CmdParams) *HelpCMD {
-	return &HelpCMD{
-		Help: NewHelp(params),
-	}
-}
-
 func NewHelp(params *cli.CmdParams) *cobra.Command {
 	helpCmd := &cobra.Command{
 		Use:     "detailed_help",

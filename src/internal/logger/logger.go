@@ -1,7 +1,7 @@
 package logger
 
 import (
-	deskFS "desktop-cleaner/internal/fs"
+	deskfs "desktop-cleaner/internal/deskfs"
 	"log/slog"
 	"os"
 
@@ -17,7 +17,7 @@ var loggerLevels = map[string]slog.Level{
 
 // Set up the logger based on the configuration
 // Must be called before server is started
-func InitLogger(config *deskFS.Config) {
+func InitLogger(config *deskfs.Config) {
 
 	var handler slog.Handler
 

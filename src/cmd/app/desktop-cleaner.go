@@ -5,7 +5,7 @@ import (
 	"desktop-cleaner/internal/cli/cli_util"
 	"desktop-cleaner/internal/cli/fs"
 	"desktop-cleaner/internal/cli/git"
-	desktopFS "desktop-cleaner/internal/fs"
+	"desktop-cleaner/internal/deskfs"
 	"desktop-cleaner/internal/terminal"
 	"fmt"
 	"log/slog"
@@ -16,7 +16,7 @@ import (
 func main() {
 	// Setup the Dependancy Injection
 	term := terminal.NewTerminal()
-	deskFS := desktopFS.NewDesktopFS(term)
+	deskFS := deskfs.NewDesktopFS(term)
 
 	// Setup the Root Command
 	rootParams := &cli.CmdParams{
@@ -36,18 +36,18 @@ func main() {
 }
 
 func generatePalette(params *cli.CmdParams) []*cobra.Command {
-	rewind := git.NewRewindCMD(params)
-	helpUtil := cli_util.NewHelpCMD(params)
-	versionUtil := cli_util.NewVersionCMD(params)
-	upgradeUtil := cli_util.NewUpgradeCMD(params)
-	organize := fs.NewOrganizeCMD(params)
+	rewind := cli.NewDesktopCleanerCMD(git.NewRewind(params)).Root
+	helpUtil := cli.NewDesktopCleanerCMD(cli_util.NewHelp(params)).Root
+	versionUtil := cli.NewDesktopCleanerCMD(cli_util.NewVersion(params)).Root
+	upgradeUtil := cli.NewDesktopCleanerCMD(cli_util.NewUpgrade(params)).Root
+	organize := cli.NewDesktopCleanerCMD(fs.NewOrganize(params)).Root
 
 	// Add commands here
 	return []*cobra.Command{
-		rewind.Rewind,
-		helpUtil.Help,
-		versionUtil.Version,
-		upgradeUtil.Upgrade,
-		organize.Organize,
+		rewind,
+		helpUtil,
+		versionUtil,
+		upgradeUtil,
+		organize,
 	}
 }

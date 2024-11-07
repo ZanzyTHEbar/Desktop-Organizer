@@ -2,7 +2,6 @@ package git
 
 import (
 	"desktop-cleaner/internal/cli"
-	"desktop-cleaner/internal/fs"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -10,12 +9,6 @@ import (
 
 type RewindCMD struct {
 	Rewind *cobra.Command
-}
-
-func NewRewindCMD(params *cli.CmdParams) *RewindCMD {
-	return &RewindCMD{
-		Rewind: NewRewind(params),
-	}
 }
 
 func NewRewind(params *cli.CmdParams) *cobra.Command {
@@ -48,7 +41,7 @@ func rewind(params *cli.CmdParams, args []string) {
 	params.Term.ToggleSpinner(true, fmt.Sprintf("Rewinding to %s ...", stepsOrSha))
 
 	// Rewind to the target sha
-	if err := fs.GitRewind(stepsOrSha); err != nil {
+	if err := params.DeskFS.GitRewind(params.DeskFS.Cwd, stepsOrSha); err != nil {
 		params.Term.OutputErrorAndExit("Error rewinding to %s: %v", stepsOrSha, err)
 	}
 

@@ -2,7 +2,7 @@ package fs
 
 import (
 	"desktop-cleaner/internal/cli"
-	deskFS "desktop-cleaner/internal/fs"
+	deskfs "desktop-cleaner/internal/deskfs"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -14,13 +14,7 @@ type OrganizeCMD struct {
 
 var srcDir string
 var targetDir string
-var fileParams deskFS.FilePathParams
-
-func NewOrganizeCMD(params *cli.CmdParams) *OrganizeCMD {
-	return &OrganizeCMD{
-		Organize: NewOrganize(params),
-	}
-}
+var fileParams deskfs.FilePathParams
 
 func NewOrganize(params *cli.CmdParams) *cobra.Command {
 	organizeCmd := &cobra.Command{
@@ -50,7 +44,6 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 }
 
 func organizeFiles(params *cli.CmdParams) error {
-
 	// Set default directories if not provided
 	if srcDir == "" {
 		var err error
@@ -66,15 +59,22 @@ func organizeFiles(params *cli.CmdParams) error {
 
 	params.Term.ToggleSpinner(true, "Organizing files...")
 
-	// Check if the destination directory is a Git repository
-	if deskFS.IsGitRepo(srcDir) {
-		params.Term.OutputInfo("Git repository detected.")
+	// Initialize Git if Git is enabled and repository is not already initialized
+	if fileParams.GitEnabled {
+		if !params.DeskFS.IsGitRepo(srcDir) {
+			params.Term.OutputInfo("Git operations enabled, but no Git repository detected. Initializing Git repository.")
+			if err := params.DeskFS.InitGitRepo(srcDir); err != nil {
+				params.Term.OutputErrorAndExit("Error initializing Git repository: %v", err)
+			}
+		} else {
+			params.Term.OutputInfo("Git repository detected.")
+		}
 	} else {
-		params.Term.OutputWarning("Git repository not detected. Proceeding without Git operations.")
+		params.Term.OutputWarning("Git operations disabled. Proceeding without Git.")
 	}
 
-	// Perform the organization actions
-	if err := params.DeskFS.EnhancedOrganize(srcDir, targetDir, *params.DeskFS.InstanceConfig, &fileParams); err != nil {
+	// Execute the organization logic with EnhancedOrganize
+	if err := params.DeskFS.EnhancedOrganize(*params.DeskFS.InstanceConfig, &fileParams); err != nil {
 		params.Term.OutputErrorAndExit("Error organizing files: %v", err)
 	}
 
