@@ -32,6 +32,7 @@ func NewOrganize(params *cli.CmdParams) *cobra.Command {
 	organizeCmd.Flags().BoolVar(&fileParams.NamesOnly, "names-only", false, "Organize by names only")
 	organizeCmd.Flags().BoolVar(&fileParams.ForceSkipIgnore, "force-skip-ignore", false, "Force skip ignored files")
 	organizeCmd.Flags().BoolVarP(&fileParams.Recursive, "recursive", "r", false, "Recursively organize files")
+	organizeCmd.Flags().BoolVarP(&fileParams.DryRun, "dryrun", "n", false, "Dry run to simulate organization")
 	organizeCmd.Flags().IntVarP(&fileParams.MaxDepth, "max-depth", "x", -1, "Maximum depth for recursion")
 	organizeCmd.Flags().BoolVarP(&fileParams.GitEnabled, "git-enabled", "g", false, "Enable Git operations")
 	organizeCmd.Flags().BoolVarP(&fileParams.CopyFiles, "copy", "c", false, "Enable move as Copy operation, required when moving files across partitions. If not enabled, will default to copy when move is not possible.")

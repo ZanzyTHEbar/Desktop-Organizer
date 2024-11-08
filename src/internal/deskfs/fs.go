@@ -29,6 +29,7 @@ type FilePathParams struct {
 	CopyFiles       bool
 	SourceDir       string
 	TargetDir       string
+	DryRun          bool
 }
 
 type DesktopFS struct {
@@ -197,7 +198,7 @@ func (dfs *DesktopFS) GetDesktopCleanerIgnore(dir string) (*ignore.GitIgnore, er
 
 // Copy copies a file or directory to the destination path.
 // It uses recursion for directories if the recursive flag is enabled.
-func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remove bool) error {
+func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remove bool, dryrun bool) error {
 	if len(node.Children) > 0 || len(node.Files) > 0 { // Check if node is a directory
 		if !recursive {
 			return fmt.Errorf("source is a directory, use recursive flag to copy directories")
@@ -211,7 +212,11 @@ func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remo
 		// Copy each child directory
 		for _, childDir := range node.Children {
 			childDst := filepath.Join(dst, childDir.Path)
-			if err := dfs.Copy(childDir, childDst, recursive, remove); err != nil {
+			if dryrun {
+				fmt.Printf("Dry run: moving %s to %s\n", node.Path, dst)
+				return nil
+			}
+			if err := dfs.Copy(childDir, childDst, recursive, remove, dryrun); err != nil {
 				return err
 			}
 		}
@@ -219,7 +224,11 @@ func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remo
 		// Copy each file in the directory
 		for _, fileNode := range node.Files {
 			fileDst := filepath.Join(dst, fileNode.Path)
-			if err := dfs.copyFile(fileNode, fileDst, remove); err != nil {
+			if dryrun {
+				fmt.Printf("Dry run: moving %s to %s\n", fileNode.Path, dst)
+				return nil
+			}
+			if err := dfs.copyFile(fileNode, fileDst, remove, dryrun); err != nil {
 				return err
 			}
 		}
@@ -234,7 +243,13 @@ func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remo
 }
 
 // Helper function for copying a file
-func (dfs *DesktopFS) copyFile(fileNode *FileNode, dst string, remove bool) error {
+func (dfs *DesktopFS) copyFile(fileNode *FileNode, dst string, remove bool, dryrun bool) error {
+
+	if dryrun {
+		fmt.Printf("Dry run: moving %s to %s\n", fileNode.Path, dst)
+		return nil
+	}
+
 	srcFile, err := os.Open(fileNode.Path)
 	if err != nil {
 		return fmt.Errorf("failed to open source file %s: %w", fileNode.Path, err)
@@ -262,13 +277,19 @@ func (dfs *DesktopFS) copyFile(fileNode *FileNode, dst string, remove bool) erro
 
 // Move attempts to move a file or directory from src to dst.
 // If a cross-device link error occurs, it falls back to copying and deleting the original.
-func (dfs *DesktopFS) Move(node *DirectoryNode, dst string, recursive bool) error {
+func (dfs *DesktopFS) Move(node *DirectoryNode, dst string, recursive bool, dryrun bool) error {
+
+	if dryrun {
+		fmt.Printf("Dry run: moving %s to %s\n", node.Path, dst)
+		return nil
+	}
+
 	// Try renaming (moving) the directory node directly
 	if err := os.Rename(node.Path, dst); err != nil {
 		// If we encounter a cross-device link error, fall back to copy and delete
 		if linkErr, ok := err.(*os.LinkError); ok && linkErr.Err == syscall.EXDEV {
 			slog.Warn(fmt.Sprintf("Cross-device error detected: falling back to copy for %s\n", node.Path))
-			if err := dfs.Copy(node, dst, recursive, true); err != nil {
+			if err := dfs.Copy(node, dst, recursive, true, dryrun); err != nil {
 				return fmt.Errorf("failed to copy file for cross-device move: %w", err)
 			}
 			return nil
@@ -398,9 +419,9 @@ func (dfs *DesktopFS) traverseAndOrganize(ctx context.Context, cancel context.Ca
 			// Copy or move the file based on params
 			var fileErr error
 			if params.CopyFiles {
-				fileErr = dfs.copyFile(fileNode, destPath, params.RemoveAfter)
+				fileErr = dfs.copyFile(fileNode, destPath, params.RemoveAfter, params.DryRun)
 			} else {
-				fileErr = dfs.Move(&DirectoryNode{Path: fileNode.Path}, destPath, false)
+				fileErr = dfs.Move(&DirectoryNode{Path: fileNode.Path}, destPath, false, params.DryRun)
 			}
 			// Send error to errCh and cancel context on first failure
 			if fileErr != nil {
