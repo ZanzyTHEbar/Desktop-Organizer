@@ -34,7 +34,6 @@ func NewDirectoryTree(rootPath string) (*DirectoryTree, error) {
 
 // Flatten recursively collects all directories and files in a flat list of paths
 func (tree *DirectoryTree) Flatten() []string {
-
 	var paths []string
 	tree.flattenNode(tree.Root, tree.Root.Path, &paths)
 	return paths
