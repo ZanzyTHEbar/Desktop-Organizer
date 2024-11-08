@@ -1,107 +1,130 @@
 package deskfs
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 
+	"github.com/BurntSushi/toml"
+	"github.com/ZanzyTHEbar/assert-lib"
 	gobaselogger "github.com/ZanzyTHEbar/go-basetools/logger"
-	"github.com/spf13/viper"
+)
+
+var (
+	// DefaultConfigPath is the default path to the config file
+	DefaultConfigPath   = filepath.Join(os.Getenv("HOME"), ".config", "desktop_cleaner")
+	DefaultConfigName   = ".desktop_cleaner"
+	ConfigAssertHandler = assert.NewAssertHandler()
 )
 
 // Config holds the mapping of file types to extensions
 type DeskFSConfig struct {
 	gobaselogger.Config
-	FileTypes  map[string][]string `mapstructure:"file_types"`
-	NestedDirs map[string][]string `mapstructure:"nested_dirs"`
-	TargetDir  string              `mapstructure:"target_dir"`
-	CacheDir   string              `mapstructure:"cache_dir"`
+	DirectoryTree *DirectoryTree `toml:"directory_tree"`
+	FileTypeTree  *FileTypeTree  `toml:"file_type_tree"`
+	TargetDir     string         `toml:"target_dir"`
+	CacheDir      string         `toml:"cache_dir"`
 }
 
-func NewConfig(optionalPath *string) (*DeskFSConfig, error) {
-	cfg := viper.New()
+type IntermediateConfig struct {
+	gobaselogger.Config
+	FileTypes map[string][]string `toml:"file_types"` // Ensure TOML tag matches the file
+	CacheDir  string              `toml:"cache_dir"`
+}
 
-	cfg.SetConfigType("toml") // REQUIRED if the config file does not have the extension in the name
-
-	// Step 1: First, try to load config from CWD
-	cwdConfigPath := ".desktop_cleaner.toml"
-	if _, err := os.Stat(cwdConfigPath); err == nil {
-		cfg.SetConfigFile(cwdConfigPath)
-	} else if optionalPath != nil {
-		// Step 2: If CWD config is not found, check the provided path
-		cfg.SetConfigFile(*optionalPath)
-	} else {
-		// Step 3: If no path is provided, look for the config in the default locations
-		cfg.SetConfigName(".desktop_cleaner") // name of config file (without extension)
-		//cfg.AddConfigPath("/etc/desktop_cleaner")          // look for config in the home directory
-		cfg.AddConfigPath("$HOME/.config/desktop_cleaner") // look for config in the home directory
-		// Look for config in current directory first
-		cfg.AddConfigPath(".")
-	}
-
-	var defaultConfig DeskFSConfig
-
-	if err := cfg.ReadInConfig(); err != nil {
-		// Create a default config file if it doesn't exist
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-
-			// set the default config file location
-
-			defaultConfigPath := filepath.Join(os.Getenv("HOME"), ".config", "desktop_cleaner", ".desktop_cleaner.toml")
-
-			cfg.SetConfigFile(defaultConfigPath)
-
-			slog.Warn(fmt.Sprintf("Config file not found. Creating a default config file at %+v\n", cfg.ConfigFileUsed()))
-
-			defaultConfig = getDefaultConfig()
-
-			// log the default config
-			slog.Debug(fmt.Sprintf("Default Config: %v", defaultConfig))
-
-			cfg.Set("file_types", defaultConfig.FileTypes)
-			cfg.Set("nested_dirs", defaultConfig.NestedDirs)
-			cfg.Set("cache_dir", defaultConfig.CacheDir)
-			cfg.Set("logger", defaultConfig.Logger)
-
-			// print the contents of viper
-			slog.Warn(fmt.Sprintf("Viper: %v", cfg.AllSettings()))
-
-			// Set the cache directory to the same directory as the config file
-			defaultConfig.CacheDir = filepath.Join(filepath.Dir(cfg.ConfigFileUsed()), defaultConfig.CacheDir)
-
-			// Create the directory if it doesn't exist
-			if _, err := os.Stat(filepath.Dir(defaultConfig.CacheDir)); os.IsNotExist(err) {
-				if err := os.MkdirAll(filepath.Dir(defaultConfig.CacheDir), 0755); err != nil {
-					slog.Error(fmt.Sprintf("Error creating cache directory at %s", defaultConfig.CacheDir))
-					return nil, err
-				}
-			}
-
-			// marshal the default config to viper
-
-			if err := cfg.WriteConfigAs(defaultConfigPath); err != nil {
-				slog.Error(fmt.Sprintf("Error creating default config file at %s", defaultConfigPath))
-				return nil, err
-			} else {
-				slog.Info(fmt.Sprintf("Default config file created at %s", defaultConfigPath))
-			}
-		} else {
-			return nil, err
+func CreateDirIfNotExist(path string) {
+	// Create the directory if it doesn't exist
+	if _, err := os.Stat(filepath.Dir(path)); os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			errMsg := fmt.Sprintf("Error creating directory at %s", filepath.Dir(path))
+			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
 		}
 	}
-
-	if err := cfg.Unmarshal(&defaultConfig); err != nil {
-		return nil, err
-	}
-
-	return &defaultConfig, nil
 }
 
-func (dfc *DeskFSConfig) SaveConfig(config *DeskFSConfig, filePath string) error {
+func NewIntermediateConfig(optionalPath *string) *IntermediateConfig {
+	var configPath string
+
+	// Step 1: Determine the configuration file path
+	tomlFileName := DefaultConfigName + ".toml"
+	if _, err := os.Stat(tomlFileName); err == nil {
+		configPath = tomlFileName
+	} else if optionalPath != nil {
+		configPath = *optionalPath
+	} else {
+		configPath = filepath.Join(DefaultConfigPath, tomlFileName)
+	}
+
+	var defaultConfig IntermediateConfig
+
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		defaultConfig = getDefaultConfig()
+		CreateDirIfNotExist(filepath.Dir(configPath))
+		file, err := os.Create(configPath)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error creating default config file: %v", err))
+			return nil
+		}
+		defer file.Close()
+
+		encoder := toml.NewEncoder(file)
+		if err := encoder.Encode(defaultConfig); err != nil {
+			slog.Error(fmt.Sprintf("Error writing default config file: %v", err))
+			return nil
+		}
+		slog.Info(fmt.Sprintf("Default config file created at %s", configPath))
+	} else {
+		// Step 3: Decode the existing config file
+		fmt.Printf("Loading config file from: %s\n", configPath)
+		var tempConfig map[string]interface{}
+		if _, err := toml.DecodeFile(configPath, &tempConfig); err != nil {
+			slog.Error(fmt.Sprintf("Error decoding config file: %v", err))
+			return nil
+		}
+
+		fmt.Printf("TempConfig (raw): %+v\n", tempConfig)
+
+		// Decode configuration file into IntermediateConfig
+		if _, err := toml.DecodeFile(configPath, &defaultConfig); err != nil {
+			slog.Error(fmt.Sprintf("Error decoding config file to struct: %v", err))
+			return nil
+		}
+
+		// Debugging: Print the loaded configuration values to ensure correctness
+		//fmt.Printf("Loaded file_types (after decode): %+v\n", defaultConfig.FileTypes)
+	}
+
+	// Step 4: Confirm loaded config (case-sensitive)
+	fmt.Printf("Loaded file_types (case-sensitive): %+v\n", defaultConfig.FileTypes)
+
+	return &defaultConfig
+}
+
+func NewDeskFSConfig() *DeskFSConfig {
+	assertHandler := assert.NewAssertHandler()
+
+	cwd, err := os.Getwd()
+	assertHandler.NoError(context.Background(), err, fmt.Sprintf("Error getting current working directory: %v", err), slog.Error)
+
+	directoryTree, err := NewDirectoryTree(cwd)
+	assertHandler.NoError(context.Background(), err, fmt.Sprintf("Error creating directory tree: %v", err), slog.Error)
+
+	return &DeskFSConfig{
+		DirectoryTree: directoryTree,
+		FileTypeTree:  NewFileTypeTree(),
+	}
+}
+
+func (dfc *DeskFSConfig) BuildFileTypeTree(config *IntermediateConfig) *DeskFSConfig {
+	// Populate FileTypeTree using the intermediate config data
+	dfc.FileTypeTree.PopulateFileTypes(config.FileTypes)
+	return dfc
+}
+
+func (dfc *IntermediateConfig) SaveConfig(config *IntermediateConfig, filePath string) error {
 	dfc.Config.Cfg.Set("file_types", config.FileTypes)
-	dfc.Config.Cfg.Set("target_dir", config.TargetDir)
-	dfc.Config.Cfg.Set("nested_dirs", config.NestedDirs)
 	dfc.Config.Cfg.Set("logger.style", config.Logger.Style)
 	dfc.Config.Cfg.Set("logger.level", config.Logger.Level)
 	dfc.Config.Cfg.Set("cache_dir", config.CacheDir)
@@ -114,8 +137,8 @@ func (dfc *DeskFSConfig) SaveConfig(config *DeskFSConfig, filePath string) error
 }
 
 // Returns the default configuration
-func getDefaultConfig() DeskFSConfig {
-	return DeskFSConfig{
+func getDefaultConfig() IntermediateConfig {
+	return IntermediateConfig{
 		FileTypes: map[string][]string{
 			"Notes":      {".md", ".rtf", ".txt"},
 			"Docs":       {".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"},
@@ -138,7 +161,6 @@ func getDefaultConfig() DeskFSConfig {
 				".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log",
 			},
 		},
-
 		Config: gobaselogger.Config{
 			Logger: gobaselogger.Logger{
 				Style: "json",
