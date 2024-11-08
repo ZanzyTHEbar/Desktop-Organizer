@@ -48,7 +48,7 @@ func setupTestDir(t *testing.T, structure map[string]string) (string, func()) {
 		}
 	}
 
-	return dir, func() { /* os.RemoveAll(dir) */ }
+	return dir, func() { os.RemoveAll(dir) }
 }
 
 func createTestConfigFile(t *testing.T, content string) (string, func()) {
@@ -197,6 +197,47 @@ func TestEnhancedOrganize(t *testing.T) {
 		assert.True(t, pathExists(path), fmt.Sprintf("Expected file %s at %s", name, path))
 		assert.FileExists(t, path)
 	}
+}
+
+func TestEnhancedOrganize_NonexistentDirs(t *testing.T) {
+	dfs := initDeskFS(t)
+	params := &FilePathParams{
+		SourceDir: "/nonexistent/source",
+		TargetDir: "/nonexistent/target",
+		Recursive: true,
+		DryRun:    true,
+	}
+	err := dfs.EnhancedOrganize(dfs.InstanceConfig, params)
+	assert.Error(t, err, "Expected error for nonexistent directories")
+}
+
+//func TestConfigValidation_DuplicateExtensions(t *testing.T) {
+//	cfg := &IntermediateConfig{
+//		FileTypes: map[string][]string{
+//			"docs": {".txt", ".doc"},
+//			"text": {".txt"},
+//		},
+//	}
+//	err := cfg.validateConfig()
+//	assert.Error(t, err, "Expected error for duplicate extensions")
+//}
+
+func initDeskFS(t *testing.T) *DesktopFS {
+	term := terminal.NewTerminal()
+	dfs := NewDesktopFS(term)
+
+	dir, cleanup := setupTestDir(t, map[string]string{
+		"source/report.docx":           "",
+		"source/photo.jpg":             "",
+		"source/setup.sh":              "",
+		"target/.desktop_cleaner.toml": `file_types = { "docs/Reports" = [".docx"], "pics/Photos" = [".jpg"], "scripts/Setup" = [".sh"] }`,
+	})
+	defer cleanup()
+
+	configFile := filepath.Join(dir, "target/.desktop_cleaner.toml")
+	dfs.InitConfig(&configFile)
+
+	return dfs
 }
 
 // Helper function to check if a file exists

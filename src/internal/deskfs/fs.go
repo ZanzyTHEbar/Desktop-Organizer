@@ -19,17 +19,26 @@ import (
 	ignore "github.com/sabhiram/go-gitignore"
 )
 
+type ConflictResolutionType string
+
+const (
+	Overwrite    ConflictResolutionType = "overwrite"
+	Skip         ConflictResolutionType = "skip"
+	RenameSuffix ConflictResolutionType = "rename"
+)
+
 type FilePathParams struct {
-	RemoveAfter     bool
-	NamesOnly       bool
-	ForceSkipIgnore bool
-	Recursive       bool
-	MaxDepth        int
-	GitEnabled      bool
-	CopyFiles       bool
-	SourceDir       string
-	TargetDir       string
-	DryRun          bool
+	RemoveAfter        bool
+	NamesOnly          bool
+	ForceSkipIgnore    bool
+	Recursive          bool
+	MaxDepth           int
+	GitEnabled         bool
+	CopyFiles          bool
+	SourceDir          string
+	TargetDir          string
+	DryRun             bool
+	ConflictResolution ConflictResolutionType // "overwrite", "skip", or "rename"
 }
 
 type DesktopFS struct {
@@ -40,6 +49,19 @@ type DesktopFS struct {
 	DirectoryTree  *DirectoryTree
 	InstanceConfig *DeskFSConfig
 	term           *terminal.Terminal
+}
+
+// NewFilePathParams initializes FilePathParams with sensible defaults.
+func NewFilePathParams() *FilePathParams {
+	return &FilePathParams{
+		SourceDir:          "",
+		TargetDir:          "",
+		Recursive:          true,     // Default to recursive to handle directories deeply
+		CopyFiles:          false,    // Default to moving files instead of copying
+		RemoveAfter:        false,    // Default to keeping source files after move
+		DryRun:             false,    // Default to executing actual file operations
+		ConflictResolution: "rename", // Default to renaming files to avoid conflicts
+	}
 }
 
 func NewDesktopFS(term *terminal.Terminal) *DesktopFS {
@@ -406,6 +428,25 @@ func (dfs *DesktopFS) traverseAndOrganize(ctx context.Context, cancel context.Ca
 			destPath := filepath.Join(destDir, filepath.Base(fileNode.Path)) // Only the base name
 			fmt.Printf("Moving file %s to %s\n", fileNode.Path, destPath)
 
+			// Check if the target file already exists
+			if _, err := os.Stat(destPath); err == nil {
+				switch params.ConflictResolution {
+				case Overwrite:
+					fmt.Printf("Overwriting existing file: %s\n", destPath)
+				case Skip:
+					fmt.Printf("Skipping existing file: %s\n", destPath)
+					return // Skip this file
+				case RenameSuffix:
+					destPath = generateUniqueFilename(destPath)
+					fmt.Printf("Renaming file to avoid conflict: %s\n", destPath)
+				default:
+					fmt.Printf("Unknown conflict resolution strategy: %s\n", params.ConflictResolution)
+					return
+				}
+			}
+
+			fmt.Printf("Creating directory: %s\n", destDir)
+
 			// Ensure target directory exists before moving or copying files
 			if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
 				select {
@@ -529,4 +570,18 @@ func findDesktopCleaner(baseDir string) string {
 	}
 
 	return dir
+}
+
+func generateUniqueFilename(path string) string {
+	dir := filepath.Dir(path)
+	ext := filepath.Ext(path)
+	base := filepath.Base(path[:len(path)-len(ext)])
+
+	// Iterate to find an available filename
+	for i := 1; ; i++ {
+		newPath := filepath.Join(dir, fmt.Sprintf("%s_%d%s", base, i, ext))
+		if _, err := os.Stat(newPath); os.IsNotExist(err) {
+			return newPath
+		}
+	}
 }
