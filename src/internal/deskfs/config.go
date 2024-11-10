@@ -38,29 +38,34 @@ func CreateDirIfNotExist(path string) {
 	// Create the directory if it doesn't exist
 	if _, err := os.Stat(filepath.Dir(path)); os.IsNotExist(err) {
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			slog.Info(fmt.Sprintf("Path %s: %v", filepath.Dir(path), err))
 			errMsg := fmt.Sprintf("Error creating directory at %s", filepath.Dir(path))
 			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
 		}
 	}
 }
 
-func NewIntermediateConfig(optionalPath *string) *IntermediateConfig {
+func NewIntermediateConfig(optionalPath string) *IntermediateConfig {
 	var configPath string
 
 	// Step 1: Determine the configuration file path
 	tomlFileName := DefaultConfigName + ".toml"
-	if _, err := os.Stat(tomlFileName); err == nil {
+	if _, err := os.Stat(tomlFileName); err != nil && optionalPath == "" {
+		slog.Debug(fmt.Sprintf("Error loading config file: %v\n", err))
 		configPath = tomlFileName
-	} else if optionalPath != nil {
-		configPath = *optionalPath
+	} else if optionalPath != "" {
+		configPath = optionalPath
 	} else {
 		configPath = filepath.Join(DefaultConfigPath, tomlFileName)
 	}
+
+	slog.Info(fmt.Sprintf("\nConfig path: %s\n", configPath))
 
 	var defaultConfig IntermediateConfig
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		defaultConfig = getDefaultConfig()
+		slog.Info(fmt.Sprintf("\nPath %s: %v", filepath.Dir(configPath), err))
 		CreateDirIfNotExist(filepath.Dir(configPath))
 		file, err := os.Create(configPath)
 		if err != nil {
