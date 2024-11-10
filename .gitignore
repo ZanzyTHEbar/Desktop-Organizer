@@ -33,3 +33,5 @@ vendor/
 /test-proj
 /extras
 .rs-old/
+
+.desktop_cleaner/

@@ -12,7 +12,9 @@
   "settings": {
     "files.autoSave": "afterDelay",
     "files.exclude": {
-      "**/.git": false
+      "**/.git": false,
+      "**/.env": false,
+      "**/.desktop_cleaner": false
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.foldingStrategy": "indentation",

@@ -1,0 +1,21 @@
+cache_dir = "/home/daofficialwizard/.config/desktop_cleaner/.cache"
+
+[Logger]
+  Style = "json"
+  Level = "DEBUG"
+
+[file_types]
+  Books = [".epub", ".mobi"]
+  CODE = [".c", ".h", ".py", ".rs", ".go", ".js", ".ts", ".jsx", ".tsx", ".html", ".css", ".php", ".java", ".cpp", ".cs", ".vb", ".sql", ".pl", ".swift", ".kt", ".r", ".m", ".asm"]
+  Compressed = [".zip", ".rar", ".tar", ".gz", ".7z"]
+  Docs = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
+  EXE = [".exe", ".appimage", ".msi"]
+  Installers = [".deb", ".rpm"]
+  Markup = [".json", ".xml", ".yml", ".yaml", ".ini", ".toml", ".cfg", ".conf", ".log"]
+  Music = [".mp3", ".wav", ".ogg", ".flac"]
+  Notes = [".md", ".rtf", ".txt"]
+  PDFS = [".pdf"]
+  Pics = [".bmp", ".gif", ".jpg", ".jpeg", ".svg", ".png"]
+  Scripts = [".sh", ".bat"]
+  Torrents = [".torrent"]
+  Vids = [".mp4", ".mov", ".avi", ".mkv"]

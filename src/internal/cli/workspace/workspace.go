@@ -24,7 +24,7 @@ func NewWorkspace(params *cli.CmdParams) *cobra.Command {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new workspace",
-		Long:  `Create a new workspace with the specified root path and configuration.`,
+		Long:  `Create a new workspace with the specified root path and configuration. IF root-path is not provided, the current working directory is used.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			rootPath, _ := cmd.Flags().GetString("root-path")
 			config, _ := cmd.Flags().GetString("config")
@@ -71,6 +71,22 @@ func NewWorkspace(params *cli.CmdParams) *cobra.Command {
 	updateCmd.Flags().Int("id", 0, "ID of the workspace to update (required)")
 	updateCmd.Flags().String("config", "", "New configuration data for the workspace")
 
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all workspaces",
+		Long:  `List all workspaces with their IDs and root paths.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			workspaces, err := params.DeskFS.WorkspaceManager.ListWorkspaces()
+			if err != nil {
+				params.Term.OutputErrorAndExit("Error listing workspaces: %v", err)
+			}
+			params.Term.OutputSuccess("Workspaces:")
+			for _, ws := range workspaces {
+				params.Term.OutputInfo(fmt.Sprintf("ID: %d, Root Path: %s", ws.ID, ws.RootPath))
+			}
+		},
+	}
+
 	// Subcommand: delete
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
@@ -93,6 +109,6 @@ func NewWorkspace(params *cli.CmdParams) *cobra.Command {
 	deleteCmd.Flags().Int("id", 0, "ID of the workspace to delete (required)")
 
 	// Add subcommands to the workspace command
-	workspaceCmd.AddCommand(createCmd, updateCmd, deleteCmd)
+	workspaceCmd.AddCommand(createCmd, updateCmd, deleteCmd, listCmd)
 	return workspaceCmd
 }

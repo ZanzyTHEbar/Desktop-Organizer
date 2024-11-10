@@ -113,22 +113,30 @@ func (c *CentralDBProvider) DeleteWorkspace(workspaceID int) error {
 	return err
 }
 
-func (c *CentralDBProvider) ListWorkspaces() ([]int, error) {
-	rows, err := c.db.Query("SELECT id FROM workspaces")
+func (c *CentralDBProvider) ListWorkspaces() ([]Workspace, error) {
+	rows, err := c.db.Query("SELECT id, root_path, config FROM workspaces")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query workspaces: %v", err)
 	}
 	defer rows.Close()
 
-	var workspaceIDs []int
+	var workspaces []Workspace
+
 	for rows.Next() {
-		var id int
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
+		var workspace Workspace
+		// Scan directly into the Workspace struct fields
+		if err := rows.Scan(&workspace.ID, &workspace.RootPath, &workspace.Config); err != nil {
+			return nil, fmt.Errorf("failed to scan workspace: %v", err)
 		}
-		workspaceIDs = append(workspaceIDs, id)
+		workspaces = append(workspaces, workspace)
 	}
-	return workspaceIDs, nil
+
+	// Check for any errors encountered during iteration
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("row iteration error: %v", err)
+	}
+
+	return workspaces, nil
 }
 
 func (c *CentralDBProvider) WorkspaceExists(workspaceID int) (bool, error) {

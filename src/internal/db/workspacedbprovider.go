@@ -46,6 +46,15 @@ func (w *WorkspaceDB) Close() error {
 	return w.db.Close()
 }
 
+// Utility function to load a workspace database by ID.
+func LoadWorkspaceDBProvider(central *CentralDBProvider, workspaceID int) (*WorkspaceDB, error) {
+	rootPath, err := central.GetWorkspacePath(workspaceID)
+	if err != nil {
+		return nil, fmt.Errorf("could not find workspace with ID %d: %v", workspaceID, err)
+	}
+	return NewWorkspaceDB(rootPath)
+}
+
 /* // Example function: AddFileMetadata adds file metadata in a workspace-specific database.
 func (w *WorkspaceDB) AddFileMetadata(path string, metadata Metadata) error {
 	metadataBlob, err := serializeMetadata(metadata)
@@ -91,15 +100,6 @@ func (w *WorkspaceDB) AddHistoryEvent(eventType string, eventJSON string) error 
 	_, err := w.db.Exec("INSERT INTO history (event_type, event_json) VALUES (?, ?)", eventType, eventJSON)
 	return err
 } */
-
-// Utility function to load a workspace database by ID.
-func LoadWorkspaceDBProvider(central *CentralDBProvider, workspaceID int) (*WorkspaceDB, error) {
-	rootPath, err := central.GetWorkspacePath(workspaceID)
-	if err != nil {
-		return nil, fmt.Errorf("could not find workspace with ID %d: %v", workspaceID, err)
-	}
-	return NewWorkspaceDB(rootPath)
-}
 
 /* // serializeMetadata serializes metadata for storage.
 func serializeMetadata(metadata Metadata) ([]byte, error) {
