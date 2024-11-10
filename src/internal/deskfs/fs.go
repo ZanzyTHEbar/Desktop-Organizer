@@ -42,13 +42,14 @@ type FilePathParams struct {
 }
 
 type DesktopFS struct {
-	HomeDir        string
-	Cwd            string
-	CacheDir       string
-	HomeDCDir      string
-	DirectoryTree  *DirectoryTree
-	InstanceConfig *DeskFSConfig
-	term           *terminal.Terminal
+	HomeDir          string
+	Cwd              string
+	CacheDir         string
+	HomeDCDir        string
+	WorkspaceManager *WorkspaceManager
+	DirectoryTree    *DirectoryTree
+	InstanceConfig   *DeskFSConfig
+	term             *terminal.Terminal
 }
 
 // NewFilePathParams initializes FilePathParams with sensible defaults.
@@ -185,7 +186,7 @@ func (dfs *DesktopFS) EnhancedOrganize(cfg *DeskFSConfig, params *FilePathParams
 	return nil
 }
 
-func (dfs *DesktopFS) InitConfig(optionalConfigPath *string) {
+func (dfs *DesktopFS) InitConfig(optionalConfigPath string) {
 	// Call NewConfig with the provided path (can be nil if no path is specified)
 	config := NewIntermediateConfig(optionalConfigPath)
 

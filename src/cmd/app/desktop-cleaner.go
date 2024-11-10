@@ -16,7 +16,11 @@ import (
 func main() {
 	// Setup the Dependancy Injection
 	term := terminal.NewTerminal()
+	fmt.Printf("Terminal: %v", term)
+
 	deskFS := deskfs.NewDesktopFS(term)
+
+	fmt.Printf("DeskFS: %v", deskFS)
 
 	// Setup the Root Command
 	rootParams := &cli.CmdParams{
@@ -24,10 +28,14 @@ func main() {
 		DeskFS: deskFS,
 	}
 
+	fmt.Printf("RootParams: %v", rootParams)
+
 	palette := generatePalette(rootParams)
 	rootParams.Palette = palette
 
 	rootCmd := cli.NewRootCMD(rootParams)
+
+	fmt.Printf("RootCmd: %v", rootCmd)
 
 	if err := rootCmd.Root.Execute(); err != nil {
 		term.OutputErrorAndExit("Error executing root command: %v", err)
@@ -36,11 +44,14 @@ func main() {
 }
 
 func generatePalette(params *cli.CmdParams) []*cobra.Command {
-	rewind := cli.NewDesktopCleanerCMD(git.NewRewind(params)).Root
+
+	rewindCmd := git.NewRewind(params)
+	rewind := cli.NewDesktopCleanerCMD(rewindCmd).Root
 	helpUtil := cli.NewDesktopCleanerCMD(cli_util.NewHelp(params)).Root
 	versionUtil := cli.NewDesktopCleanerCMD(cli_util.NewVersion(params)).Root
 	upgradeUtil := cli.NewDesktopCleanerCMD(cli_util.NewUpgrade(params)).Root
 	organize := cli.NewDesktopCleanerCMD(fs.NewOrganize(params)).Root
+	//workspace := cli.NewDesktopCleanerCMD(workspace.NewWorkspace(params)).Root
 
 	// Add commands here
 	return []*cobra.Command{
@@ -49,5 +60,6 @@ func generatePalette(params *cli.CmdParams) []*cobra.Command {
 		versionUtil,
 		upgradeUtil,
 		organize,
+		//workspace,
 	}
 }

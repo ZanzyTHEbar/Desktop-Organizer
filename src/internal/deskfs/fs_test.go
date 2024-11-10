@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func loadTestConfig(configPath *string) *DeskFSConfig {
+func loadTestConfig(configPath string) *DeskFSConfig {
 	// Call NewConfig with the provided path (can be nil if no path is specified)
 	config := NewIntermediateConfig(configPath)
 
@@ -75,7 +75,7 @@ func TestNewConfig(t *testing.T) {
 		defer os.Chdir(originalDir)
 		os.Chdir(dir)
 
-		config := loadTestConfig(nil)
+		config := loadTestConfig("")
 		// Verify the existence of .docx extension in the FileTypeTree
 		found := config.FileTypeTree.Root.FindExtension(".docx")
 		assert.True(t, found, "Expected to find '.docx' extension")
@@ -86,7 +86,7 @@ func TestNewConfig(t *testing.T) {
 		configPath, cleanup := createTestConfigFile(t, configContent)
 		defer cleanup()
 
-		config := loadTestConfig(&configPath)
+		config := loadTestConfig(configPath)
 		foundJPG := config.FileTypeTree.Root.FindExtension(".jpg")
 		foundPNG := config.FileTypeTree.Root.FindExtension(".png")
 		assert.True(t, foundJPG, "Expected to find '.jpg' extension")
@@ -94,7 +94,7 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	t.Run("creates default config if no config found", func(t *testing.T) {
-		config := loadTestConfig(nil)
+		config := loadTestConfig("")
 		found := config.FileTypeTree.Root.FindExtension(".md")
 		assert.True(t, found, "Expected to find '.md' extension in default config")
 	})
@@ -166,7 +166,7 @@ func TestEnhancedOrganize(t *testing.T) {
 	defer cleanup()
 
 	configFile := filepath.Join(dir, "target/.desktop_cleaner.toml")
-	dfs.InitConfig(&configFile)
+	dfs.InitConfig(configFile)
 
 	params := &FilePathParams{
 		SourceDir:   filepath.Join(dir, "source"),
@@ -235,7 +235,7 @@ func initDeskFS(t *testing.T) *DesktopFS {
 	defer cleanup()
 
 	configFile := filepath.Join(dir, "target/.desktop_cleaner.toml")
-	dfs.InitConfig(&configFile)
+	dfs.InitConfig(configFile)
 
 	return dfs
 }

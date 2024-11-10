@@ -27,7 +27,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile *string
+var cfgFile string
 
 type RootCMD struct {
 	Root *cobra.Command
@@ -44,14 +44,19 @@ func NewRoot(params *CmdParams) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "desktop-cleaner [command] [flags]",
 		Aliases: []string{"dcx"},
-		Short:   "DesktopCleaner is a tool to automate the clean up a specified directory",
+		Short:   "DesktopCleaner is a tool to automate the clean up of a specified directory",
+	}
+
+	// Validate palette
+	if params.Palette == nil {
+		params.Palette = []*cobra.Command{}
 	}
 
 	for _, cmd := range params.Palette {
 		rootCmd.AddCommand(cmd)
 	}
 
-	rootCmd.PersistentFlags().StringVar(cfgFile, "config", "", "config file (default is $HOME/.config/.desktop_cleaner/.desktop_cleaner.toml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/.desktop_cleaner/.desktop_cleaner.toml)")
 
 	viper.AutomaticEnv() // read in environment variables that match
 

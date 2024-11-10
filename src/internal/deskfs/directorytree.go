@@ -32,30 +32,29 @@ func NewDirectoryTree(rootPath string) (*DirectoryTree, error) {
 	}, nil
 }
 
+// AddFile adds a file node to the tree at a specified path.
+// If intermediate directories don't exist, it creates them.
+func (tree *DirectoryTree) AddFile(path string, filePath string, size int64, modifiedAt time.Time) error {
+
+	// Split the path into directories and then find or create the path
+	targetNode := tree.FindOrCreatePath(filepath.SplitList(path))
+
+	// Now that we're at the target directory, add the file node
+	targetNode.AddFile(&FileNode{
+		Path:       filePath,
+		Extension:  filepath.Ext(filePath),
+		Size:       size,
+		ModifiedAt: modifiedAt,
+	})
+
+	return nil
+}
+
 // Flatten recursively collects all directories and files in a flat list of paths
 func (tree *DirectoryTree) Flatten() []string {
 	var paths []string
 	tree.flattenNode(tree.Root, tree.Root.Path, &paths)
 	return paths
-}
-
-// flattenNode is a helper function for Flatten, processing each node recursively
-func (tree *DirectoryTree) flattenNode(node *DirectoryNode, currentPath string, paths *[]string) {
-
-	// Add current directory path to paths
-	*paths = append(*paths, currentPath)
-
-	// Recursively process each child directory
-	for _, child := range node.Children {
-		childPath := filepath.Join(currentPath, child.Path)
-		tree.flattenNode(child, childPath, paths)
-	}
-
-	// Add all files in this directory to paths
-	for _, file := range node.Files {
-		filePath := filepath.Join(currentPath, file.Path)
-		*paths = append(*paths, filePath)
-	}
 }
 
 // SafeCacheSet safely sets a value in the Cache map
@@ -125,20 +124,21 @@ func (tree *DirectoryTree) FindOrCreatePath(path []string) *DirectoryNode {
 	return current
 }
 
-// AddFile adds a file node to the tree at a specified path.
-// If intermediate directories don't exist, it creates them.
-func (tree *DirectoryTree) AddFile(path string, filePath string, size int64, modifiedAt time.Time) error {
+// flattenNode is a helper function for Flatten, processing each node recursively
+func (tree *DirectoryTree) flattenNode(node *DirectoryNode, currentPath string, paths *[]string) {
 
-	// Split the path into directories and then find or create the path
-	targetNode := tree.FindOrCreatePath(filepath.SplitList(path))
+	// Add current directory path to paths
+	*paths = append(*paths, currentPath)
 
-	// Now that we're at the target directory, add the file node
-	targetNode.AddFile(&FileNode{
-		Path:       filePath,
-		Extension:  filepath.Ext(filePath),
-		Size:       size,
-		ModifiedAt: modifiedAt,
-	})
+	// Recursively process each child directory
+	for _, child := range node.Children {
+		childPath := filepath.Join(currentPath, child.Path)
+		tree.flattenNode(child, childPath, paths)
+	}
 
-	return nil
+	// Add all files in this directory to paths
+	for _, file := range node.Files {
+		filePath := filepath.Join(currentPath, file.Path)
+		*paths = append(*paths, filePath)
+	}
 }

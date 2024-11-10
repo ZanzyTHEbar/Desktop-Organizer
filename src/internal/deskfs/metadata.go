@@ -111,3 +111,51 @@ func (dfs *DesktopFS) FlattenMetadata(node *DirectoryNode) map[string]interface{
 
 	return flatMetadata
 }
+
+// AddRelationships adds relationships between nodes in the DirectoryTree
+func (dfs *DesktopFS) AddRelationships(node *DirectoryNode) {
+	// Add parent-child relationships
+	for _, child := range node.Children {
+		dfs.AddRelationship(node, child.Path, "contains")
+		dfs.AddRelationship(child, node.Path, "parent")
+		// Recursively add relationships to children
+		dfs.AddRelationships(child)
+	}
+
+	for _, file := range node.Files {
+		dfs.AddRelationship(node, file.Path, "contains")
+	}
+
+	// Add temporal relationships
+	allNodes := dfs.collectAllNodes(node)
+	for i, nodeA := range allNodes {
+		for j, nodeB := range allNodes {
+			if i != j && nodeA.Metadata.ModifiedAt.Sub(nodeB.Metadata.ModifiedAt) < time.Hour*24 {
+				// If nodes were modified within a day of each other, relate them
+				relationship := Relationship{
+					RelatedNode: nodeB.Path,
+					Type:        "modified-around-same-time",
+				}
+				nodeA.Metadata.Relationships = append(nodeA.Metadata.Relationships, relationship)
+			}
+		}
+	}
+}
+
+func (dfs *DesktopFS) AddRelationship(node *DirectoryNode, relatedPath string, relType string) {
+	relationship := Relationship{
+		RelatedNode: relatedPath,
+		Type:        relType,
+	}
+	node.Metadata.Relationships = append(node.Metadata.Relationships, relationship)
+}
+
+// collectAllNodes collects all nodes (both directories and files) from the given DirectoryNode
+func (dfs *DesktopFS) collectAllNodes(node *DirectoryNode) []*DirectoryNode {
+	var nodes []*DirectoryNode
+	nodes = append(nodes, node)
+	for _, child := range node.Children {
+		nodes = append(nodes, dfs.collectAllNodes(child)...)
+	}
+	return nodes
+}
