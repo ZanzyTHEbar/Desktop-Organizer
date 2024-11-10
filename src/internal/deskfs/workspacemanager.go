@@ -1,8 +1,10 @@
 package deskfs
 
 import (
+	"context"
 	"desktop-cleaner/internal/db"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -14,28 +16,46 @@ type WorkspaceManager struct {
 	AssertHandler *assert.AssertHandler
 }
 
-func NewWorkspace(centralDB *db.CentralDBProvider, assertHandler *assert.AssertHandler) *WorkspaceManager {
+func NewWorkspaceManager(centralDB *db.CentralDBProvider, assertHandler *assert.AssertHandler) *WorkspaceManager {
 	return &WorkspaceManager{
 		centralDB:     centralDB,
 		AssertHandler: assertHandler,
 	}
 }
 
+func createWorkspacePath(rootPath string) string {
+	return filepath.Join(rootPath, DefaultConfigName)
+}
+
 // CreateWorkspace creates a new workspace, adding it to the central DB and initializing its own DB.
 func (wm *WorkspaceManager) CreateWorkspace(rootPath, config string) (int, error) {
-	workspaceID, err := wm.centralDB.AddWorkspace(rootPath, config)
-	if err != nil {
-		return 0, err
+	slog.Debug(fmt.Sprintf("Creating workspace at path: %s\n", rootPath))
+
+	rootPath = createWorkspacePath(rootPath)
+
+	slog.Debug(fmt.Sprintf("Workspace path: %s\n", rootPath))
+	//mkdirall to check if the directory exists, if not create it
+	if _, err := os.Stat(rootPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(rootPath, 0755); err != nil {
+			slog.Info(fmt.Sprintf("Path %s: %v", rootPath, err))
+			errMsg := fmt.Sprintf("Error creating directory at %s", rootPath)
+			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
+		}
 	}
 
 	// Initialize workspace-specific database
-	workspaceDB, err := NewWorkspaceDBProvider(rootPath)
+	workspaceDB, err := db.NewWorkspaceDB(rootPath)
 	if err != nil {
 		return 0, fmt.Errorf("failed to initialize workspace DB: %v", err)
 	}
 	defer workspaceDB.Close()
 
-	fmt.Printf("Workspace created with ID: %d at path: %s\n", workspaceID, rootPath)
+	workspaceID, err := wm.centralDB.AddWorkspace(rootPath, config)
+	if err != nil {
+		return 0, err
+	}
+
+	slog.Debug(fmt.Sprintf("Workspace created with ID: %d at path: %s\n", workspaceID, rootPath))
 	return workspaceID, nil
 }
 
@@ -45,7 +65,7 @@ func (wm *WorkspaceManager) UpdateWorkspace(workspaceID int, newConfig string) e
 	if err != nil {
 		return fmt.Errorf("failed to update workspace configuration: %v", err)
 	}
-	fmt.Printf("Workspace with ID %d updated.\n", workspaceID)
+	slog.Debug(fmt.Sprintf("Workspace with ID %d updated.\n", workspaceID))
 	return nil
 }
 
@@ -64,12 +84,28 @@ func (wm *WorkspaceManager) DeleteWorkspace(workspaceID int) error {
 	}
 
 	// Remove the workspace database file
+
+	// Stat the workspace DB file, and if it doesn't exist, return
+	rootPath = createWorkspacePath(rootPath)
 	workspaceDBPath := filepath.Join(rootPath, "workspace.db")
+
+	if _, err := os.Stat(workspaceDBPath); os.IsNotExist(err) {
+		return nil
+	}
+
 	if err := os.Remove(workspaceDBPath); err != nil {
 		return fmt.Errorf("failed to delete workspace DB file: %v", err)
 	}
-	fmt.Printf("Workspace with ID %d deleted successfully.\n", workspaceID)
+	slog.Debug(fmt.Sprintf("Workspace with ID %d deleted.\n", workspaceID))
 	return nil
+}
+
+func (wm *WorkspaceManager) ListWorkspaces() ([]db.Workspace, error) {
+	workspaces, err := wm.centralDB.ListWorkspaces()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list workspaces: %v", err)
+	}
+	return workspaces, nil
 }
 
 /* // InitWorkspace initializes the current directory as a workspace

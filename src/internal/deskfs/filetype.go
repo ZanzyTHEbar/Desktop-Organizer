@@ -2,6 +2,7 @@ package deskfs
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 )
 
@@ -138,7 +139,7 @@ func (filetype *FileTypeNode) AddExtensions(extensions []string) {
 func (tree *FileTypeTree) PopulateFileTypes(fileTypeRules map[string][]string) {
 	for path, extensions := range fileTypeRules {
 		tree.addDirectPath(path, extensions)
-		fmt.Printf("Added path: %s with extensions: %v\n", path, extensions)
+		slog.Debug(fmt.Sprintf("Added path: %s with extensions: %v", path, extensions))
 	}
 }
 
@@ -155,7 +156,7 @@ func (tree *FileTypeTree) addDirectPath(path string, extensions []string) {
 		}
 
 		// Check the case of the directory name
-		fmt.Printf("Adding directory level: %s\n", dir)
+		slog.Debug(fmt.Sprintf("Adding directory: %s", dir))
 
 		// Look for an existing child node with the same name
 		var next *FileTypeNode

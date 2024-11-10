@@ -1,5 +1,11 @@
 package db
 
+type Workspace struct {
+	ID       int
+	RootPath string
+	Config   string
+}
+
 // Example usage:
 //func main() {
 //	// Initialize central database

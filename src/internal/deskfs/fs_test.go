@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: Setup mock filesystem & Database for testing
+// TODO: Test workspaces feature
+
 func loadTestConfig(configPath string) *DeskFSConfig {
 	// Call NewConfig with the provided path (can be nil if no path is specified)
 	config := NewIntermediateConfig(configPath)

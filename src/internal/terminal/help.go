@@ -3,6 +3,7 @@ package terminal
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -43,5 +44,5 @@ func printCmds(w io.Writer, prefix string, colors []lipgloss.Color, cmds ...stri
 func PrintCustomCmd(prefix, cmd, alias, desc string) {
 	cmd = strings.Replace(cmd, alias, fmt.Sprintf("(%s)", alias), 1)
 	styled := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF00FF"))
-	fmt.Printf("%s%s 👉 %s\n", prefix, styled.Bold(true).Render(cmd), styled.Italic(true).Render(desc))
+	slog.Info(fmt.Sprintf("%s%s 👉 %s\n", prefix, styled.Bold(true).Render(cmd), styled.Italic(true).Render(desc)))
 }

@@ -14,9 +14,10 @@ import (
 
 var (
 	// DefaultConfigPath is the default path to the config file
-	DefaultConfigPath   = filepath.Join(os.Getenv("HOME"), ".config", "desktop_cleaner")
 	DefaultConfigName   = ".desktop_cleaner"
+	DefaultConfigPath   = filepath.Join(os.Getenv("HOME"), ".config", "desktop_cleaner")
 	ConfigAssertHandler = assert.NewAssertHandler()
+	DefaultCacheDir     = filepath.Join(DefaultConfigPath, ".cache")
 )
 
 // Config holds the mapping of file types to extensions
@@ -49,7 +50,7 @@ func NewIntermediateConfig(optionalPath string) *IntermediateConfig {
 	var configPath string
 
 	// Step 1: Determine the configuration file path
-	tomlFileName := DefaultConfigName + ".toml"
+	tomlFileName := filepath.Join(DefaultConfigName, DefaultConfigName+".toml")
 	if _, err := os.Stat(tomlFileName); err != nil && optionalPath == "" {
 		slog.Debug(fmt.Sprintf("Error loading config file: %v\n", err))
 		configPath = tomlFileName
@@ -82,27 +83,24 @@ func NewIntermediateConfig(optionalPath string) *IntermediateConfig {
 		slog.Info(fmt.Sprintf("Default config file created at %s", configPath))
 	} else {
 		// Step 3: Decode the existing config file
-		fmt.Printf("Loading config file from: %s\n", configPath)
+		slog.Info(fmt.Sprintf("Loading config file from %s", configPath))
 		var tempConfig map[string]interface{}
 		if _, err := toml.DecodeFile(configPath, &tempConfig); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding config file: %v", err))
 			return nil
 		}
 
-		fmt.Printf("TempConfig (raw): %+v\n", tempConfig)
+		slog.Debug(fmt.Sprintf("TempConfig (raw): %+v\n", tempConfig))
 
 		// Decode configuration file into IntermediateConfig
 		if _, err := toml.DecodeFile(configPath, &defaultConfig); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding config file to struct: %v", err))
 			return nil
 		}
-
-		// Debugging: Print the loaded configuration values to ensure correctness
-		//fmt.Printf("Loaded file_types (after decode): %+v\n", defaultConfig.FileTypes)
 	}
 
 	// Step 4: Confirm loaded config (case-sensitive)
-	fmt.Printf("Loaded file_types (case-sensitive): %+v\n", defaultConfig.FileTypes)
+	slog.Debug(fmt.Sprintf("Loaded file_types (case-sensitive): %+v\n", defaultConfig.FileTypes))
 
 	return &defaultConfig
 }
@@ -142,6 +140,8 @@ func (dfc *IntermediateConfig) SaveConfig(config *IntermediateConfig, filePath s
 }
 
 // Returns the default configuration
+// Baseline configuration is used within the cwd of the user, and is just an example map of file names to extensions.
+// We can support more metrics other than file types.
 func getDefaultConfig() IntermediateConfig {
 	return IntermediateConfig{
 		FileTypes: map[string][]string{
@@ -169,9 +169,9 @@ func getDefaultConfig() IntermediateConfig {
 		Config: gobaselogger.Config{
 			Logger: gobaselogger.Logger{
 				Style: "json",
-				Level: gobaselogger.LoggerLevels["info"].String(),
+				Level: gobaselogger.LoggerLevels["debug"].String(),
 			},
 		},
-		CacheDir: ".cache",
+		CacheDir: DefaultCacheDir,
 	}
 }
