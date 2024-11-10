@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -73,8 +74,8 @@ func (up *Upgrade) CheckForUpgrade() {
 
 	if latestVersion.GreaterThan(currentVersion) {
 		up.term.ToggleSpinner(false, "")
-		fmt.Println("A new version of DesktopCleaner is available:", ColorHiGreen.Bold(true).Render(versionStr))
-		fmt.Printf("Current version: %s\n", ColorHiCyan.Bold(true).Render(version.Version))
+		slog.Info(fmt.Sprintf("A new version of DesktopCleaner is available: %s", ColorHiGreen.Bold(true).Render(versionStr)))
+		slog.Info(fmt.Sprintf("Current version: %s\n", ColorHiCyan.Bold(true).Render(version.Version)))
 		confirmed := up.term.ConfirmYesNo("Upgrade to the latest version?")
 
 		if confirmed {

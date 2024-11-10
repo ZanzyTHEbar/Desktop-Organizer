@@ -2,6 +2,7 @@ package deskfs
 
 import (
 	"context"
+	"desktop-cleaner/internal/db"
 	"desktop-cleaner/internal/terminal"
 	"errors"
 	"fmt"
@@ -65,7 +66,7 @@ func NewFilePathParams() *FilePathParams {
 	}
 }
 
-func NewDesktopFS(term *terminal.Terminal) *DesktopFS {
+func NewDesktopFS(term *terminal.Terminal, centralDB *db.CentralDBProvider) *DesktopFS {
 	var err error
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -80,12 +81,15 @@ func NewDesktopFS(term *terminal.Terminal) *DesktopFS {
 	homeDCDir := findDesktopCleaner(cwd)
 	cacheDir := filepath.Join(homeDCDir, ".cache")
 
+	assertHAndler := assert.NewAssertHandler()
+
 	return &DesktopFS{
-		HomeDir:   home,
-		Cwd:       cwd,
-		CacheDir:  cacheDir,
-		HomeDCDir: homeDCDir,
-		term:      term,
+		HomeDir:          home,
+		Cwd:              cwd,
+		CacheDir:         cacheDir,
+		HomeDCDir:        homeDCDir,
+		WorkspaceManager: NewWorkspaceManager(centralDB, assertHAndler),
+		term:             term,
 	}
 }
 
@@ -189,8 +193,7 @@ func (dfs *DesktopFS) EnhancedOrganize(cfg *DeskFSConfig, params *FilePathParams
 func (dfs *DesktopFS) InitConfig(optionalConfigPath string) {
 	// Call NewConfig with the provided path (can be nil if no path is specified)
 	config := NewIntermediateConfig(optionalConfigPath)
-
-	fmt.Printf("Config: % #v\n", config)
+	slog.Debug(fmt.Sprintf("Loading configuration from path: %v\n", config))
 
 	deskfsConfig := NewDeskFSConfig()
 
@@ -236,7 +239,7 @@ func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remo
 		for _, childDir := range node.Children {
 			childDst := filepath.Join(dst, childDir.Path)
 			if dryrun {
-				fmt.Printf("Dry run: moving %s to %s\n", node.Path, dst)
+				slog.Info(fmt.Sprintf("Dry run: moving %s to %s\n", childDir.Path, dst))
 				return nil
 			}
 			if err := dfs.Copy(childDir, childDst, recursive, remove, dryrun); err != nil {
@@ -248,7 +251,7 @@ func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remo
 		for _, fileNode := range node.Files {
 			fileDst := filepath.Join(dst, fileNode.Path)
 			if dryrun {
-				fmt.Printf("Dry run: moving %s to %s\n", fileNode.Path, dst)
+				slog.Info(fmt.Sprintf("Dry run: moving %s to %s\n", fileNode.Path, dst))
 				return nil
 			}
 			if err := dfs.copyFile(fileNode, fileDst, remove, dryrun); err != nil {
@@ -269,7 +272,7 @@ func (dfs *DesktopFS) Copy(node *DirectoryNode, dst string, recursive bool, remo
 func (dfs *DesktopFS) copyFile(fileNode *FileNode, dst string, remove bool, dryrun bool) error {
 
 	if dryrun {
-		fmt.Printf("Dry run: moving %s to %s\n", fileNode.Path, dst)
+		slog.Info(fmt.Sprintf("Dry run: moving %s to %s\n", fileNode.Path, dst))
 		return nil
 	}
 
@@ -303,7 +306,7 @@ func (dfs *DesktopFS) copyFile(fileNode *FileNode, dst string, remove bool, dryr
 func (dfs *DesktopFS) Move(node *DirectoryNode, dst string, recursive bool, dryrun bool) error {
 
 	if dryrun {
-		fmt.Printf("Dry run: moving %s to %s\n", node.Path, dst)
+		slog.Info(fmt.Sprintf("Dry run: moving %s to %s\n", node.Path, dst))
 		return nil
 	}
 
@@ -352,7 +355,7 @@ func (dfs *DesktopFS) buildTreeAndCache(rootPath string, recursive bool, maxDept
 func (dfs *DesktopFS) buildTreeNodes(node *DirectoryNode, recursive bool, maxDepth int, currentDepth int) error {
 	// Check if the current depth exceeds the maxDepth
 	if currentDepth > maxDepth {
-		fmt.Printf("Max depth of %d reached at %s. Skipping deeper levels.\n", maxDepth, node.Path)
+		slog.Warn(fmt.Sprintf("Max depth of %d reached at %s. Skipping deeper levels.\n", maxDepth, node.Path))
 		return nil
 	}
 
@@ -419,34 +422,34 @@ func (dfs *DesktopFS) traverseAndOrganize(ctx context.Context, cancel context.Ca
 			// Determine the target folder based on file extension
 			targetDir, found := dfs.determineTargetFolder(ctx, fileNode, cfg)
 			if !found {
-				fmt.Printf("Skipping file %s as no target path found\n", fileNode.Name)
+				slog.Warn(fmt.Sprintf("Skipping file %s as no target path found\n", fileNode.Name))
 				return // Skip files without a target folder
 			}
 
 			// Construct the correct destination directory and path
 			destDir := filepath.Join(params.TargetDir, targetDir)
-			fmt.Printf("Creating directory: %s\n", destDir)
+			slog.Debug(fmt.Sprintf("Creating directory: %s\n", destDir))
 			destPath := filepath.Join(destDir, filepath.Base(fileNode.Path)) // Only the base name
-			fmt.Printf("Moving file %s to %s\n", fileNode.Path, destPath)
+			slog.Debug(fmt.Sprintf("Moving file %s to %s\n", fileNode.Path, destPath))
 
 			// Check if the target file already exists
 			if _, err := os.Stat(destPath); err == nil {
 				switch params.ConflictResolution {
 				case Overwrite:
-					fmt.Printf("Overwriting existing file: %s\n", destPath)
+					slog.Info(fmt.Sprintf("Overwriting existing file: %s\n", destPath))
 				case Skip:
-					fmt.Printf("Skipping existing file: %s\n", destPath)
+					slog.Info(fmt.Sprintf("Skipping file to avoid conflict: %s\n", destPath))
 					return // Skip this file
 				case RenameSuffix:
 					destPath = generateUniqueFilename(destPath)
-					fmt.Printf("Renaming file to avoid conflict: %s\n", destPath)
+					slog.Info(fmt.Sprintf("Renaming file to avoid conflict: %s\n", destPath))
 				default:
-					fmt.Printf("Unknown conflict resolution strategy: %s\n", params.ConflictResolution)
+					slog.Info(fmt.Sprintf("Unknown conflict resolution type: %s\n", params.ConflictResolution))
 					return
 				}
 			}
 
-			fmt.Printf("Creating directory: %s\n", destDir)
+			slog.Info(fmt.Sprintf("Moving file %s to %s\n", fileNode.Path, destPath))
 
 			// Ensure target directory exists before moving or copying files
 			if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
@@ -492,9 +495,9 @@ func (dfs *DesktopFS) determineTargetFolder(ctx context.Context, fileNode *FileN
 
 	path, found := dfs.findFolderForExtension(ctx, cfg.FileTypeTree.Root, ext)
 	if found {
-		fmt.Printf("File %s with extension %s mapped to path: %s\n", fileNode.Name, ext, path)
+		slog.Info(fmt.Sprintf("File %s with extension %s mapped to path: %s\n", fileNode.Name, ext, path))
 	} else {
-		fmt.Printf("No mapping found for file %s with extension %s\n", fileNode.Name, ext)
+		slog.Info(fmt.Sprintf("No mapping found for file %s with extension %s\n", fileNode.Name, ext))
 	}
 	return path, found
 }
@@ -545,7 +548,7 @@ func buildPathFromNode(ctx context.Context, node *FileTypeNode) string {
 	assertHandler.Assert(ctx, node.IsRoot() || node.Parent != nil, "Root Node should not have a parent", slog.Error)
 
 	finalPath := filepath.Join(pathSegments...)
-	fmt.Printf("Final constructed path (with case preserved): %s\n", finalPath)
+	slog.Debug(fmt.Sprintf("Final constructed path (with case preserved): %s\n", finalPath))
 
 	assertHandler.Assert(ctx, finalPath != "", "Constructed path should not be empty", slog.Error)
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"desktop-cleaner/internal/db"
 	"desktop-cleaner/internal/deskfs"
 	"desktop-cleaner/internal/terminal"
 
@@ -8,9 +9,10 @@ import (
 )
 
 type CmdParams struct {
-	Term    *terminal.Terminal
-	DeskFS  *deskfs.DesktopFS
-	Palette []*cobra.Command
+	Term      *terminal.Terminal
+	DeskFS    *deskfs.DesktopFS
+	Palette   []*cobra.Command
+	CentralDB *db.CentralDBProvider
 }
 
 type DesktopCleanerCMD struct {

@@ -22,10 +22,13 @@ require (
 )
 
 require (
+	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
+	github.com/libsql/sqlite-antlr4-parser v0.0.0-20240721121621-c0bdc870f11c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/tursodatabase/go-libsql v0.0.0-20241011135853-3effbb6dea5c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
@@ -65,7 +68,7 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/exp v0.0.0-20241108182801-04b207964beb // indirect
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.15.0 // indirect

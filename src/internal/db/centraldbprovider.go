@@ -3,8 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+
+	_ "github.com/tursodatabase/go-libsql"
 )
 
 // CentralDBProvider tracks the locations of all workspaces.
@@ -12,14 +15,28 @@ type CentralDBProvider struct {
 	db *sql.DB
 }
 
+const centralDBFileName = "central.db"
+
 // NewCentralDBProvider opens or initializes the central database at the binary location.
 func NewCentralDBProvider() (*CentralDBProvider, error) {
-	execPath, err := os.Executable()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, fmt.Errorf("could not determine executable path: %v", err)
+		return nil, fmt.Errorf("could not get user home directory: %v", err)
 	}
-	dbPath := filepath.Join(filepath.Dir(execPath), "central.db")
-	db, err := sql.Open("libsql", "file:"+dbPath)
+
+	// Construct config path
+	configPath := filepath.Join(homeDir, ".config", "desktop_cleaner")
+
+	// Ensure the config directory exists
+	if err := os.MkdirAll(configPath, 0755); err != nil {
+		return nil, fmt.Errorf("could not create config directory: %v", err)
+	}
+
+	dbPath := filepath.Join(configPath, centralDBFileName)
+
+	slog.Info("Central database path:", "path", dbPath)
+
+	db, err := ConnectToDB(dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +51,8 @@ func NewCentralDBProvider() (*CentralDBProvider, error) {
 // init sets up the central database tables.
 func (c *CentralDBProvider) init() error {
 	_, err := c.db.Exec(`CREATE TABLE IF NOT EXISTS workspaces (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		root_path TEXT UNIQUE,
+		id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+		root_path TEXT,
 		config TEXT
 	)`)
 	return err
@@ -43,10 +60,18 @@ func (c *CentralDBProvider) init() error {
 
 // AddWorkspace adds a new workspace to the central database and returns its ID.
 func (c *CentralDBProvider) AddWorkspace(rootPath, config string) (int, error) {
+	slog.Debug(fmt.Sprintf("Adding workspace with root path %s\n", rootPath))
+
+	// Create a new workspace entry in the database
 	result, err := c.db.Exec("INSERT INTO workspaces (root_path, config) VALUES (?, ?)", rootPath, config)
 	if err != nil {
 		return 0, err
 	}
+
+	// Create the workspace directory and workspace database
+
+	slog.Debug(fmt.Sprintf("Successfully created Workspace"))
+
 	id, err := result.LastInsertId()
 	return int(id), err
 }

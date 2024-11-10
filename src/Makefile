@@ -42,7 +42,7 @@ build:
 	@echo "Building $(BINARY_NAME) ..."
 	@echo "Moving binary to $(BINARY_PATH) ..."
 	@mkdir -p $(BINARY_PATH)
-	@go build $(BUILD_FLAGS) -o $(BINARY_PATH) $(MODULE_PATH)
+	@CGO_ENABLED=1 go build $(BUILD_FLAGS) -o $(BINARY_PATH) $(MODULE_PATH)
 
 clean-all:
 	@echo "Cleaning All..."

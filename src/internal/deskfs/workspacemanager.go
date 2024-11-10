@@ -3,6 +3,7 @@ package deskfs
 import (
 	"desktop-cleaner/internal/db"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -14,7 +15,7 @@ type WorkspaceManager struct {
 	AssertHandler *assert.AssertHandler
 }
 
-func NewWorkspace(centralDB *db.CentralDBProvider, assertHandler *assert.AssertHandler) *WorkspaceManager {
+func NewWorkspaceManager(centralDB *db.CentralDBProvider, assertHandler *assert.AssertHandler) *WorkspaceManager {
 	return &WorkspaceManager{
 		centralDB:     centralDB,
 		AssertHandler: assertHandler,
@@ -23,19 +24,21 @@ func NewWorkspace(centralDB *db.CentralDBProvider, assertHandler *assert.AssertH
 
 // CreateWorkspace creates a new workspace, adding it to the central DB and initializing its own DB.
 func (wm *WorkspaceManager) CreateWorkspace(rootPath, config string) (int, error) {
+	slog.Debug(fmt.Sprintf("Creating workspace at path: %s\n", rootPath))
+
 	workspaceID, err := wm.centralDB.AddWorkspace(rootPath, config)
 	if err != nil {
 		return 0, err
 	}
 
 	// Initialize workspace-specific database
-	workspaceDB, err := NewWorkspaceDBProvider(rootPath)
+	workspaceDB, err := db.NewWorkspaceDB(rootPath)
 	if err != nil {
 		return 0, fmt.Errorf("failed to initialize workspace DB: %v", err)
 	}
 	defer workspaceDB.Close()
 
-	fmt.Printf("Workspace created with ID: %d at path: %s\n", workspaceID, rootPath)
+	slog.Debug(fmt.Sprintf("Workspace created with ID: %d at path: %s\n", workspaceID, rootPath))
 	return workspaceID, nil
 }
 
@@ -45,7 +48,7 @@ func (wm *WorkspaceManager) UpdateWorkspace(workspaceID int, newConfig string) e
 	if err != nil {
 		return fmt.Errorf("failed to update workspace configuration: %v", err)
 	}
-	fmt.Printf("Workspace with ID %d updated.\n", workspaceID)
+	slog.Debug(fmt.Sprintf("Workspace with ID %d updated.\n", workspaceID))
 	return nil
 }
 
@@ -68,7 +71,7 @@ func (wm *WorkspaceManager) DeleteWorkspace(workspaceID int) error {
 	if err := os.Remove(workspaceDBPath); err != nil {
 		return fmt.Errorf("failed to delete workspace DB file: %v", err)
 	}
-	fmt.Printf("Workspace with ID %d deleted successfully.\n", workspaceID)
+	slog.Debug(fmt.Sprintf("Workspace with ID %d deleted.\n", workspaceID))
 	return nil
 }
 
