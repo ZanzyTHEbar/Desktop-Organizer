@@ -50,7 +50,7 @@ func NewIntermediateConfig(optionalPath string) *IntermediateConfig {
 	var configPath string
 
 	// Step 1: Determine the configuration file path
-	tomlFileName := DefaultConfigName + ".toml"
+	tomlFileName := filepath.Join(DefaultConfigName, DefaultConfigName+".toml")
 	if _, err := os.Stat(tomlFileName); err != nil && optionalPath == "" {
 		slog.Debug(fmt.Sprintf("Error loading config file: %v\n", err))
 		configPath = tomlFileName
