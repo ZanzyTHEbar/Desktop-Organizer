@@ -1,4 +1,4 @@
-package deskfs
+package graph
 
 import (
 	"fmt"
@@ -141,4 +141,16 @@ func (tree *DirectoryTree) flattenNode(node *DirectoryNode, currentPath string, 
 		filePath := filepath.Join(currentPath, file.Path)
 		*paths = append(*paths, filePath)
 	}
+}
+
+func (tree *DirectoryTree) String() string {
+	return tree.Root.String()
+}
+
+func (tree *DirectoryTree) MarshalJSON() ([]byte, error) {
+	return tree.Root.MarshalJSON()
+}
+
+func (tree *DirectoryTree) UnMarshalJSON(data []byte) error {
+	return tree.Root.UnMarshalJSON(data)
 }

@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"desktop-cleaner/internal/graph"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,7 +13,8 @@ import (
 
 // CentralDBProvider tracks the locations of all workspaces.
 type CentralDBProvider struct {
-	db *sql.DB
+	db            *sql.DB
+	DirectoryTree *graph.DirectoryTree
 }
 
 const centralDBFileName = "central.db"

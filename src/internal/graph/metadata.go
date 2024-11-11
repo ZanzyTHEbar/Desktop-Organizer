@@ -1,4 +1,4 @@
-package deskfs
+package graph
 
 import (
 	"os"
@@ -58,7 +58,7 @@ func GenerateMetadata(nodePath string) (Metadata, error) {
 }
 
 // AddMetadataToTree recursively traverses the DirectoryTree and adds metadata to each node
-func (dfs *DesktopFS) AddMetadataToTree(node *DirectoryNode) error {
+func AddMetadataToTree(node *DirectoryNode) error {
 	// Generate metadata for the current directory node
 	metadata, err := GenerateMetadata(node.Path)
 	if err != nil {
@@ -81,7 +81,7 @@ func (dfs *DesktopFS) AddMetadataToTree(node *DirectoryNode) error {
 
 	// Recursively add metadata to child directories
 	for _, childDir := range node.Children {
-		if err := dfs.AddMetadataToTree(childDir); err != nil {
+		if err := AddMetadataToTree(childDir); err != nil {
 			return err
 		}
 	}
@@ -90,7 +90,7 @@ func (dfs *DesktopFS) AddMetadataToTree(node *DirectoryNode) error {
 }
 
 // FlattenMetadata flattens metadata into a map that can be used for LLM input
-func (dfs *DesktopFS) FlattenMetadata(node *DirectoryNode) map[string]interface{} {
+func FlattenMetadata(node *DirectoryNode) map[string]interface{} {
 	flatMetadata := make(map[string]interface{})
 
 	// Add directory node metadata
@@ -103,7 +103,7 @@ func (dfs *DesktopFS) FlattenMetadata(node *DirectoryNode) map[string]interface{
 
 	// Recursively add child directory metadata
 	for _, childDir := range node.Children {
-		childMetadata := dfs.FlattenMetadata(childDir)
+		childMetadata := FlattenMetadata(childDir)
 		for key, value := range childMetadata {
 			flatMetadata[key] = value
 		}
@@ -113,21 +113,21 @@ func (dfs *DesktopFS) FlattenMetadata(node *DirectoryNode) map[string]interface{
 }
 
 // AddRelationships adds relationships between nodes in the DirectoryTree
-func (dfs *DesktopFS) AddRelationships(node *DirectoryNode) {
+func AddRelationships(node *DirectoryNode) {
 	// Add parent-child relationships
 	for _, child := range node.Children {
-		dfs.AddRelationship(node, child.Path, "contains")
-		dfs.AddRelationship(child, node.Path, "parent")
+		AddRelationship(node, child.Path, "contains")
+		AddRelationship(child, node.Path, "parent")
 		// Recursively add relationships to children
-		dfs.AddRelationships(child)
+		AddRelationships(child)
 	}
 
 	for _, file := range node.Files {
-		dfs.AddRelationship(node, file.Path, "contains")
+		AddRelationship(node, file.Path, "contains")
 	}
 
 	// Add temporal relationships
-	allNodes := dfs.collectAllNodes(node)
+	allNodes := collectAllNodes(node)
 	for i, nodeA := range allNodes {
 		for j, nodeB := range allNodes {
 			if i != j && nodeA.Metadata.ModifiedAt.Sub(nodeB.Metadata.ModifiedAt) < time.Hour*24 {
@@ -142,7 +142,7 @@ func (dfs *DesktopFS) AddRelationships(node *DirectoryNode) {
 	}
 }
 
-func (dfs *DesktopFS) AddRelationship(node *DirectoryNode, relatedPath string, relType string) {
+func AddRelationship(node *DirectoryNode, relatedPath string, relType string) {
 	relationship := Relationship{
 		RelatedNode: relatedPath,
 		Type:        relType,
@@ -151,11 +151,11 @@ func (dfs *DesktopFS) AddRelationship(node *DirectoryNode, relatedPath string, r
 }
 
 // collectAllNodes collects all nodes (both directories and files) from the given DirectoryNode
-func (dfs *DesktopFS) collectAllNodes(node *DirectoryNode) []*DirectoryNode {
+func collectAllNodes(node *DirectoryNode) []*DirectoryNode {
 	var nodes []*DirectoryNode
 	nodes = append(nodes, node)
 	for _, child := range node.Children {
-		nodes = append(nodes, dfs.collectAllNodes(child)...)
+		nodes = append(nodes, collectAllNodes(child)...)
 	}
 	return nodes
 }

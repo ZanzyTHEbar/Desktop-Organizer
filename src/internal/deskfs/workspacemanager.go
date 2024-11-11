@@ -2,6 +2,7 @@ package deskfs
 
 import (
 	"context"
+	"desktop-cleaner/internal"
 	"desktop-cleaner/internal/db"
 	"fmt"
 	"log/slog"
@@ -24,7 +25,7 @@ func NewWorkspaceManager(centralDB *db.CentralDBProvider, assertHandler *assert.
 }
 
 func createWorkspacePath(rootPath string) string {
-	return filepath.Join(rootPath, DefaultConfigName)
+	return filepath.Join(rootPath, internal.DefaultWorkspaceDotDir)
 }
 
 // CreateWorkspace creates a new workspace, adding it to the central DB and initializing its own DB.
@@ -41,6 +42,24 @@ func (wm *WorkspaceManager) CreateWorkspace(rootPath, config string) (int, error
 			errMsg := fmt.Sprintf("Error creating directory at %s", rootPath)
 			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
 		}
+	}
+
+	// create the ignore file
+	ignoreFilePath := filepath.Join(rootPath, ".desktop_cleaner_ignore")
+
+	if _, err := os.Stat(ignoreFilePath); os.IsNotExist(err) {
+		if _, err := os.Create(ignoreFilePath); err != nil {
+			slog.Info(fmt.Sprintf("Path %s: %v", ignoreFilePath, err))
+			errMsg := fmt.Sprintf("Error creating ignore file at %s", ignoreFilePath)
+			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
+		}
+
+		// Add the `.git` folder to the ignore file
+		ignoreFile, err := os.OpenFile(ignoreFilePath, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return 0, fmt.Errorf("failed to open ignore file: %v", err)
+		}
+		defer ignoreFile.Close()
 	}
 
 	// Initialize workspace-specific database
