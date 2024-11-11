@@ -36,6 +36,8 @@ MODULE_PATH := cmd/app/desktop-cleaner.go
 # Default target
 .DEFAULT_GOAL := build
 
+DEFAULTDBPATH = ~/.config/desktop_cleaner/central.db
+
 all: build
 
 build:
@@ -51,12 +53,18 @@ clean-all:
 
 clean:
 	@echo "Cleaning Binary..."
+	@echo "Removing $(DEFAULTDBPATH) ..."
+	@rm -f $(DEFAULTDBPATH) 
 	@echo "Removing $(BINARY_PATH) ..."
 	@rm -rf $(BINARY_PATH_PREFIX)
 
 run:
 	@echo "Running..."
 	@go run $(MODULE_PATH)
+
+bin:
+	@echo "Running binary..."
+	@./bin/desktop-cleaner-linuxamd64/./desktop-cleaner
 
 # Test the application
 test:

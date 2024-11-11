@@ -16,7 +16,7 @@ const (
 )
 
 type Workspace struct {
-	ID       int
+	ID       uuid.UUID
 	RootPath string
 	Config   string
 }
