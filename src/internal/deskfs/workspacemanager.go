@@ -30,7 +30,7 @@ func createWorkspacePath(rootPath string) string {
 }
 
 // CreateWorkspace creates a new workspace, adding it to the central DB and initializing its own DB.
-func (wm *WorkspaceManager) CreateWorkspace(rootPath, config string) (int, error) {
+func (wm *WorkspaceManager) CreateWorkspace(rootPath, config string) (uuid.UUID, error) {
 	slog.Debug(fmt.Sprintf("Creating workspace at path: %s\n", rootPath))
 
 	rootPath = createWorkspacePath(rootPath)
@@ -58,24 +58,36 @@ func (wm *WorkspaceManager) CreateWorkspace(rootPath, config string) (int, error
 		// Add the `.git` folder to the ignore file
 		ignoreFile, err := os.OpenFile(ignoreFilePath, os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			return 0, fmt.Errorf("failed to open ignore file: %v", err)
+			slog.Info(fmt.Sprintf("Path %s: %v", ignoreFilePath, err))
+			errMsg := fmt.Sprintf("Error opening ignore file at %s", ignoreFilePath)
+			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
 		}
+
+		// Write the `.git` folder to the ignore file
+		if _, err := ignoreFile.WriteString(".git\n"); err != nil {
+			slog.Info(fmt.Sprintf("Path %s: %v", ignoreFilePath, err))
+			errMsg := fmt.Sprintf("Error writing to ignore file at %s", ignoreFilePath)
+			ConfigAssertHandler.NoError(context.Background(), err, errMsg, slog.Error)
+		}
+
 		defer ignoreFile.Close()
 	}
 
 	// Initialize workspace-specific database
 	workspaceDB, err := db.NewWorkspaceDB(rootPath)
 	if err != nil {
-		return 0, fmt.Errorf("failed to initialize workspace DB: %v", err)
+		return uuid.Nil, fmt.Errorf("failed to initialize workspace database: %v", err)
 	}
 	defer workspaceDB.Close()
 
-	workspaceID, err := wm.centralDB.AddWorkspace(rootPath, config)
+	workspace, err := wm.centralDB.AddWorkspace(rootPath, config)
 	if err != nil {
-		return 0, err
+		return uuid.Nil, fmt.Errorf("failed to add workspace: %v", err)
 	}
 
-	slog.Debug(fmt.Sprintf("Workspace created with ID: %d at path: %s\n", workspaceID, rootPath))
+	workspaceID := workspace.ID
+
+	slog.Debug(fmt.Sprintf("Workspace created with ID: %s at path: %s\n", workspaceID, rootPath))
 	return workspaceID, nil
 }
 

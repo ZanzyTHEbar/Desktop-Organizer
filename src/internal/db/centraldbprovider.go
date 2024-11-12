@@ -7,10 +7,15 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/tursodatabase/go-libsql"
 )
+
+// TODO: Fix logging so that it is optional and outputs to the default unix log directory, stdout|stderr, or the dfault config directory
+
+// TODO: Implement generic database validation methods
 
 // CentralDBProvider tracks the locations of all workspaces.
 type CentralDBProvider struct {
@@ -63,21 +68,43 @@ func (c *CentralDBProvider) init() error {
 }
 
 // AddWorkspace adds a new workspace to the central database and returns its ID.
-func (c *CentralDBProvider) AddWorkspace(rootPath, config string) (int, error) {
+func (c *CentralDBProvider) AddWorkspace(rootPath, config string) (*Workspace, error) {
 	slog.Debug(fmt.Sprintf("Adding workspace with root path %s\n", rootPath))
 
+	c.db.Query("BEGIN TRANSACTION")
+
+	// Create Workspace instance
+	workspace := Workspace{
+		ID:        uuid.New(),
+		RootPath:  rootPath,
+		Config:    config,
+		Timestamp: time.Now(),
+	}
 	// Create a new workspace entry in the database
-	result, err := c.db.Exec("INSERT INTO workspaces (root_path, config) VALUES (?, ?)", rootPath, config)
+	result, err := c.db.Exec("INSERT INTO workspaces (id, root_path, config) VALUES (?, ?, ?)", workspace.ID, workspace.RootPath, workspace.Config)
 	if err != nil {
-		return 0, err
+		c.db.Query("ROLLBACK")
+		return nil, fmt.Errorf("failed to insert workspace: %v", err)
 	}
 
-	// Create the workspace directory and workspace database
+	// Check the number of rows affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		c.db.Query("ROLLBACK")
+		return nil, fmt.Errorf("failed to get rows affected: %v", err)
+	}
+
+	if rowsAffected != 1 {
+		c.db.Query("ROLLBACK")
+		return nil, fmt.Errorf("expected 1 row affected, got %d", rowsAffected)
+	}
+
+	// Commit the transaction
+	c.db.Query("END TRANSACTION")
 
 	slog.Debug(fmt.Sprintf("Successfully created Workspace"))
 
-	id, err := result.LastInsertId()
-	return int(id), err
+	return &workspace, nil
 }
 
 func (c *CentralDBProvider) UpdateWorkspaceConfig(workspaceID uuid.UUID, config string) (bool, error) {
@@ -138,7 +165,7 @@ func (c *CentralDBProvider) ListWorkspaces() ([]Workspace, error) {
 	for rows.Next() {
 		var workspace Workspace
 		// Scan directly into the Workspace struct fields
-		if err := rows.Scan(&workspace.ID, &workspace.RootPath, &workspace.Config); err != nil {
+		if err := rows.Scan(&workspace.ID, &workspace.RootPath, &workspace.Config, &workspace.Timestamp); err != nil {
 			return nil, fmt.Errorf("failed to scan workspace: %v", err)
 		}
 		workspaces = append(workspaces, workspace)

@@ -16,9 +16,10 @@ const (
 )
 
 type Workspace struct {
-	ID       uuid.UUID
-	RootPath string
-	Config   string
+	ID        uuid.UUID
+	RootPath  string
+	Config    string
+	Timestamp time.Time
 }
 
 type OperationHistory struct {

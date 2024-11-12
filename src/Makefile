@@ -36,7 +36,8 @@ MODULE_PATH := cmd/app/desktop-cleaner.go
 # Default target
 .DEFAULT_GOAL := build
 
-DEFAULTDBPATH = ~/.config/desktop_cleaner/central.db
+DEFAULT_DB_PATH = ~/.config/desktop_cleaner/central.db
+TEMP_PATHS =  /tmp/desktop_cleaner_test
 
 all: build
 
@@ -53,10 +54,17 @@ clean-all:
 
 clean:
 	@echo "Cleaning Binary..."
-	@echo "Removing $(DEFAULTDBPATH) ..."
-	@rm -f $(DEFAULTDBPATH) 
+	@echo "Removing $(DEFAULT_DB_PATH) ..."
+	@rm -f $(DEFAULT_DB_PATH) 
 	@echo "Removing $(BINARY_PATH) ..."
 	@rm -rf $(BINARY_PATH_PREFIX)
+	@echo "Removing temporary test directories $(TEMP_PATHS) ..."
+	@rm -rf $(TEMP_PATHS)*
+
+gentest:
+	@echo "Generating test directory..."
+	# I want the directory to have a random number appended to the name
+	@mkdir -p $(TEMP_PATHS)-$(shell date +'%Y%m%d%H%M%S')-$(shell shuf -i 1-1000 -n 1) 
 
 run:
 	@echo "Running..."

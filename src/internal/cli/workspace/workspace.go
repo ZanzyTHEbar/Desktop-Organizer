@@ -42,7 +42,7 @@ func NewWorkspace(params *cli.CmdParams) *cobra.Command {
 			if err != nil {
 				params.Term.OutputErrorAndExit("Error creating workspace: %v", err)
 			}
-			params.Term.OutputSuccess(fmt.Sprintf("Workspace created successfully with ID: %d", workspaceID))
+			params.Term.OutputSuccess(fmt.Sprintf("Workspace created successfully with ID: %s", workspaceID))
 		},
 	}
 	createCmd.Flags().String("root-path", "", "Root path for the workspace (required)")
@@ -91,7 +91,7 @@ func NewWorkspace(params *cli.CmdParams) *cobra.Command {
 			}
 			params.Term.OutputSuccess("Workspaces:")
 			for _, ws := range workspaces {
-				params.Term.OutputInfo(fmt.Sprintf("ID: %d, Root Path: %s", ws.ID, ws.RootPath))
+				params.Term.OutputInfo(fmt.Sprintf("ID: %s, Root Path: %s", ws.ID, ws.RootPath))
 			}
 		},
 	}
