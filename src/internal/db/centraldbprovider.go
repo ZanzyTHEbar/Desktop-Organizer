@@ -56,7 +56,7 @@ func (c *CentralDBProvider) init() error {
 	_, err := c.db.Exec(`CREATE TABLE IF NOT EXISTS workspaces (
 		id TEXT PRIMARY KEY UNIQUE,
 		root_path TEXT,
-		config TEXT
+		config TEXT,
 		time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`)
 	return err
@@ -127,7 +127,7 @@ func (c *CentralDBProvider) DeleteWorkspace(workspaceID uuid.UUID) error {
 }
 
 func (c *CentralDBProvider) ListWorkspaces() ([]Workspace, error) {
-	rows, err := c.db.Query("SELECT id, root_path, config, timestamp FROM workspaces ORDER BY time_stamp ASC;")
+	rows, err := c.db.Query("SELECT id, root_path, config, time_stamp FROM workspaces ORDER BY time_stamp ASC;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to query workspaces: %v", err)
 	}
