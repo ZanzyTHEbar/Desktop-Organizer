@@ -1,7 +1,7 @@
 package db
 
 import (
-	"desktop-cleaner/internal/graph"
+	"desktop-cleaner/internal/filesystem/trees"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -23,7 +23,7 @@ type snapshotJSON struct {
 
 var tempSnapshotMap = make(map[string]*snapshotJSON)
 
-func (cd *CentralDBProvider) TakeSnapshot(tree *graph.DirectoryTree) error {
+func (cd *CentralDBProvider) TakeSnapshot(tree *trees.DirectoryTree) error {
 	state, err := tree.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("error marshalling directory tree: %w", err)
@@ -43,7 +43,7 @@ func (cd *CentralDBProvider) RestoreSnapshot(snapshotID uuid.UUID) error {
 		return fmt.Errorf("error getting snapshot: %w", err)
 	}
 
-	tree := &graph.DirectoryTree{}
+	tree := &trees.DirectoryTree{}
 	err = tree.UnMarshalJSON(snapshot.DirectoryState)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling directory tree: %w", err)

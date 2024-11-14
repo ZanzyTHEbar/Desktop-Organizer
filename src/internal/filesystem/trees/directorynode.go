@@ -1,8 +1,7 @@
-package graph
+package trees
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -16,13 +15,11 @@ const (
 
 // FileNode represents a file with metadata
 type FileNode struct {
-	ID         uuid.UUID `json:"id"`
-	Path       string    `json:"path"`
-	Name       string    `json:"name"`
-	Extension  string    `json:"extension"`
-	Size       int64     `json:"size"`
-	ModifiedAt time.Time `json:"modified_at"`
-	Metadata   Metadata  `json:"metadata"`
+	ID        uuid.UUID `json:"id"`
+	Path      string    `json:"path"`
+	Name      string    `json:"name"`
+	Extension string    `json:"extension"`
+	Metadata  Metadata  `json:"metadata"`
 }
 
 type DirectoryNode struct {

@@ -3,7 +3,7 @@ package deskfs
 import (
 	"context"
 	"desktop-cleaner/internal"
-	"desktop-cleaner/internal/graph"
+	"desktop-cleaner/internal/filesystem/trees"
 	"fmt"
 	"log/slog"
 	"os"
@@ -21,7 +21,7 @@ var (
 // Config holds the mapping of file types to extensions
 type DeskFSConfig struct {
 	gobaselogger.Config
-	FileTypeTree *graph.FileTypeTree `toml:"file_type_tree"`
+	FileTypeTree *trees.FileTypeTree `toml:"file_type_tree"`
 	TargetDir    string              `toml:"target_dir"`
 	CacheDir     string              `toml:"cache_dir"`
 }
@@ -108,7 +108,7 @@ func NewIntermediateConfig(optionalPath string) *IntermediateConfig {
 
 func NewDeskFSConfig() *DeskFSConfig {
 	return &DeskFSConfig{
-		FileTypeTree: graph.NewFileTypeTree(),
+		FileTypeTree: trees.NewFileTypeTree(),
 	}
 }
 

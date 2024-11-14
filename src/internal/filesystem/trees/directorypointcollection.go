@@ -1,4 +1,4 @@
-package graph
+package trees
 
 import "gonum.org/v1/gonum/spatial/kdtree"
 

@@ -1,4 +1,4 @@
-package graph
+package trees
 
 import (
 	"fmt"
@@ -115,8 +115,6 @@ func (tree *DirectoryTree) AddFile(path string, filePath string, size int64, mod
 	targetNode.AddFile(&FileNode{
 		Path:       filePath,
 		Extension:  filepath.Ext(filePath),
-		Size:       size,
-		ModifiedAt: modifiedAt,
 	})
 
 	return nil
