@@ -338,9 +338,9 @@ func (dfs *DesktopFS) buildTreeAndCache(rootPath string, recursive bool, maxDept
 		dfs.WorkspaceManager.centralDB.DirectoryTree = newDirectoryTree
 	}
 
-	if dfs.WorkspaceManager.centralDB.DirectoryTree.Cache == nil {
-		dfs.WorkspaceManager.centralDB.DirectoryTree.Cache = make(map[string]*graph.DirectoryNode)
-	}
+	//if dfs.WorkspaceManager.centralDB.DirectoryTree.Cache == nil {
+	//	dfs.WorkspaceManager.centralDB.DirectoryTree.Cache = make(map[string]*graph.DirectoryNode)
+	//}
 
 	return dfs.buildTreeNodes(dfs.WorkspaceManager.centralDB.DirectoryTree.Root, recursive, maxDepth, 0)
 }
@@ -376,7 +376,7 @@ func (dfs *DesktopFS) buildTreeNodes(node *graph.DirectoryNode, recursive bool, 
 		if entry.IsDir() {
 			childDir := graph.NewDirectoryNode(childPath, node)
 			node.Children = append(node.Children, childDir)
-			dfs.WorkspaceManager.centralDB.DirectoryTree.SafeCacheSet(childPath, childDir)
+			//dfs.WorkspaceManager.centralDB.DirectoryTree.SafeCacheSet(childPath, childDir)
 
 			if !recursive {
 				continue
@@ -402,7 +402,7 @@ func (dfs *DesktopFS) buildTreeNodes(node *graph.DirectoryNode, recursive bool, 
 				ModifiedAt: modtime,
 			}
 			child = node.AddFile(childFile)
-			dfs.WorkspaceManager.centralDB.DirectoryTree.SafeCacheSet(childPath, child)
+			//dfs.WorkspaceManager.centralDB.DirectoryTree.SafeCacheSet(childPath, child)
 		}
 	}
 

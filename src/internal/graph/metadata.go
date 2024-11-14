@@ -3,6 +3,8 @@ package graph
 import (
 	"os"
 	"time"
+
+	"gonum.org/v1/gonum/spatial/kdtree"
 )
 
 // Relationship captures an edge between two nodes with a specific meaning
@@ -21,6 +23,17 @@ type Metadata struct {
 	Owner         string         // Owner of the file (if available)
 	Tags          []string       // Tags associated with the file or directory
 	Relationships []Relationship // Relationships to other nodes
+}
+
+// ToKDTreePoint converts Metadata attributes into a k-dimensional point (slice of float64) for KD-Tree usage.
+func (m *Metadata) ToKDTreePoint() kdtree.Point {
+    // Convert metadata attributes like size, modification time (Unix timestamp), permissions, etc., to float64
+    return kdtree.Point{
+        float64(m.Size),
+        float64(m.ModifiedAt.Unix()),
+        float64(m.CreatedAt.Unix()),
+        float64(m.Permissions.Perm()),
+    }
 }
 
 // GenerateMetadata generates metadata for a given file or directory node

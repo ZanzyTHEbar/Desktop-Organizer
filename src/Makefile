@@ -63,7 +63,6 @@ clean:
 
 gentest:
 	@echo "Generating test directory..."
-	# I want the directory to have a random number appended to the name
 	@mkdir -p $(TEMP_PATHS)-$(shell date +'%Y%m%d%H%M%S')-$(shell shuf -i 1-1000 -n 1) 
 
 run:

@@ -16,7 +16,6 @@
       "**/.env": false,
       "**/.desktop_cleaner": false
     },
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.foldingStrategy": "indentation",
     "editor.formatOnSave": true,
     "editor.quickSuggestions": {
@@ -154,10 +153,8 @@
   "extensions": {
     "recommendations": [
       "golang.go",
-      "dbaeumer.vscode-eslint",
       "esbenp.prettier-vscode",
       "tamasfe.even-better-toml",
-      "bradlc.vscode-tailwindcss",
       "vscode.makefile-tools"
     ]
   }
